@@ -1,11 +1,15 @@
 import * as PIXI from "pixi.js";
 
 const canvasElement = <HTMLDivElement>document.getElementById(`app`);
+const mainDivContainer = <HTMLDivElement>(
+  document.getElementById(`mainContainer`)
+);
 
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
 //@ts-ignore
+//@ts-ignore any type checking.
 canvasElement.appendChild(app.view);
 
 const mainContainer = new PIXI.Container();
@@ -25,11 +29,16 @@ app.stage.addChild(mainContainer);
 
 console.log(`mainContainer`, mainContainer);
 //scroll stuff
+mainContainer.scale.set(app.view.width / mainContainer.width);
 const maxScroll = mainContainer.height - app.view.height;
 // Create the scrollbar graphic
 const scrollbar = new PIXI.Graphics();
+
 app.stage.addChild(scrollbar);
+
 canvasElement.addEventListener("wheel", (event) => {
+  console.log(event);
+
   console.log(`scrollin`);
   // Update the container's y position based on the mouse wheel delta
   mainContainer.position.y += event.deltaY;
@@ -44,7 +53,22 @@ canvasElement.addEventListener("wheel", (event) => {
     app.view.height * (app.view.height / mainContainer.height);
   const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
   scrollbar.clear();
-  scrollbar.beginFill(0xffffff);
+  scrollbar.beginFill(0x808080);
   scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
   scrollbar.endFill();
+});
+
+app.renderer.on(`resize`, () => {
+  console.log(`resize`);
+  const scrollPercent = -mainContainer.position.y / maxScroll;
+  const scrollbarHeight =
+    app.view.height * (app.view.height / mainContainer.height);
+  const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
+  scrollbar.clear();
+  scrollbar.beginFill(0x808080);
+  scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
+  scrollbar.endFill();
+  if (app.view.width !== mainContainer.width) {
+    mainContainer.scale.set(app.view.width / mainContainer.width);
+  }
 });

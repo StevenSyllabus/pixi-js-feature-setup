@@ -6,6 +6,7 @@ const canvasElement = <HTMLDivElement>document.getElementById(`app`);
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
+//@ts-ignore
 canvasElement.appendChild(app.view);
 
 const mainContainer = new PIXI.Container();

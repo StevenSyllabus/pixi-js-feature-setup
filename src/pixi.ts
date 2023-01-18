@@ -23,6 +23,7 @@ webpageSprite.addEventListener(`pointerdown`, () => {
 mainContainer.addChild(webpageSprite);
 app.stage.addChild(mainContainer);
 
+console.log(`mainContainer`, mainContainer);
 //scroll stuff
 const maxScroll = mainContainer.height - app.view.height;
 // Create the scrollbar graphic

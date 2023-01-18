@@ -1,7 +1,6 @@
-import * as PIXI from 'pixi.js';
+import * as PIXI from "pixi.js";
 
 const canvasElement = <HTMLDivElement>document.getElementById(`app`);
-
 
 let app = new PIXI.Application({
   resizeTo: canvasElement,
@@ -21,10 +20,8 @@ webpageSprite.addEventListener(`pointerdown`, () => {
   console.log(`clicked the sprite`);
 });
 
-
-mainContainer.addChild(webpageSprite)
+mainContainer.addChild(webpageSprite);
 app.stage.addChild(mainContainer);
-
 
 //scroll stuff
 const maxScroll = mainContainer.height - app.view.height;
@@ -32,33 +29,21 @@ const maxScroll = mainContainer.height - app.view.height;
 const scrollbar = new PIXI.Graphics();
 app.stage.addChild(scrollbar);
 canvasElement.addEventListener("wheel", (event) => {
-  console.log(`scrollin`)
-        // Update the container's y position based on the mouse wheel delta
-        mainContainer.position.y += event.deltaY;
+  console.log(`scrollin`);
+  // Update the container's y position based on the mouse wheel delta
+  mainContainer.position.y += event.deltaY;
 
-        // Clamp the container's position so that it can't scroll past the max scroll value
-        mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
-        mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+  // Clamp the container's position so that it can't scroll past the max scroll value
+  mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
+  mainContainer.position.y = Math.min(mainContainer.position.y, 0);
 
-        // Update the scrollbar position and size based on the container's scroll position
-        const scrollPercent = -mainContainer.position.y / maxScroll;
-        const scrollbarHeight =
-          app.view.height * (app.view.height / mainContainer.height);
-        const scrollbarY =
-          scrollPercent * (app.view.height - scrollbarHeight);
-        scrollbar.clear();
-        scrollbar.beginFill(0xffffff);
-        scrollbar.drawRect(
-          app.view.width - 8,
-          scrollbarY,
-          14,
-          scrollbarHeight
-        );
-        scrollbar.endFill();
-      });
-    
-
-
-
-
-
+  // Update the scrollbar position and size based on the container's scroll position
+  const scrollPercent = -mainContainer.position.y / maxScroll;
+  const scrollbarHeight =
+    app.view.height * (app.view.height / mainContainer.height);
+  const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
+  scrollbar.clear();
+  scrollbar.beginFill(0xffffff);
+  scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
+  scrollbar.endFill();
+});

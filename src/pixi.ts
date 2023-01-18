@@ -17,7 +17,7 @@ const screenshot = PIXI.Texture.from(
 const webpageSprite = PIXI.Sprite.from(screenshot);
 webpageSprite.interactive = true;
 webpageSprite.addEventListener(`pointerdown`, () => {
-  console.log(`clicked the sprite`);
+  console.log(`clicked the sprite today`);
 });
 
 mainContainer.addChild(webpageSprite);

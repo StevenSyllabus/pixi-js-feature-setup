@@ -3,6 +3,7 @@ import * as PIXI from "pixi.js";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 
+
 const canvasElement = <HTMLDivElement>document.getElementById(`app`);
 const mainDivContainer = <HTMLDivElement>(
   document.getElementById(`mainContainer`)
@@ -11,6 +12,7 @@ const mainDivContainer = <HTMLDivElement>(
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
+//@ts-ignore
 //@ts-ignore
 //@ts-ignore any type checking.
 canvasElement.appendChild(app.view);

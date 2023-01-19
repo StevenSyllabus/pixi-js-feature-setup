@@ -9,6 +9,7 @@ const mainDivContainer = <HTMLDivElement>(
   document.getElementById(`mainContainer`)
 );
 //csp comment
+//csp commit2
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });

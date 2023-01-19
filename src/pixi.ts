@@ -1,4 +1,4 @@
-//@ts-nocheck
+//@ts-nocheck this turns off typesccript checks for the entire file
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
 import * as PIXI from "pixi.js";
 //simply import the Bubble testing functions from the other file.
@@ -15,8 +15,6 @@ const mainDivContainer = <HTMLDivElement>(
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
-
-//add pixi to the html container
 canvasElement.appendChild(app.view);
 
 //create a container for the webpage and add it to the stage

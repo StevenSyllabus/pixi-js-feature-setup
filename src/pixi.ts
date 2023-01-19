@@ -12,6 +12,8 @@ const mainDivContainer = <HTMLDivElement>(
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
+
+//this is a test comment
 //@ts-ignore
 //@ts-ignore
 //@ts-ignore any type checking.

@@ -1,4 +1,7 @@
+// this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js
 import * as PIXI from "pixi.js";
+//simply import the Bubble testing functions from the other file.
+import { setState, triggerEvent } from "./bubble";
 
 const canvasElement = <HTMLDivElement>document.getElementById(`app`);
 const mainDivContainer = <HTMLDivElement>(
@@ -21,7 +24,8 @@ const screenshot = PIXI.Texture.from(
 const webpageSprite = PIXI.Sprite.from(screenshot);
 webpageSprite.interactive = true;
 webpageSprite.addEventListener(`pointerdown`, () => {
-  console.log(`clicked the sprite this is the new result`);
+  setState(`selectedElement`, "this is the new result");
+  triggerEvent(`click`);
 });
 
 mainContainer.addChild(webpageSprite);
@@ -37,9 +41,6 @@ const scrollbar = new PIXI.Graphics();
 app.stage.addChild(scrollbar);
 
 canvasElement.addEventListener("wheel", (event) => {
-  console.log(event);
-
-  console.log(`scrollin`);
   // Update the container's y position based on the mouse wheel delta
   mainContainer.position.y += event.deltaY;
 

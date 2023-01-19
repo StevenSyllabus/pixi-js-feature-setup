@@ -1,4 +1,4 @@
-// this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js
+// this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script></script>
 import * as PIXI from "pixi.js";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
@@ -13,7 +13,7 @@ const mainDivContainer = <HTMLDivElement>(
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
-
+PIXI.
 //this is a test comment
 //@ts-ignore
 //@ts-ignore

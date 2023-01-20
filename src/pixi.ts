@@ -1,6 +1,8 @@
 //@ts-nocheck
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
 import * as PIXI from "pixi.js";
+console.log(PIXI);
+
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 

@@ -1,15 +1,15 @@
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js
 import * as PIXI from "pixi.js";
+import '@pixi/events';
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
-
+import { DAS, att, colors, rects, rects2 } from "./test-data"
 
 const canvasElement = <HTMLDivElement>document.getElementById(`app`);
 const mainDivContainer = <HTMLDivElement>(
   document.getElementById(`mainContainer`)
 );
-//csp comment
-//csp commit2
+const renderer = PIXI.autoDetectRenderer({});
 let app = new PIXI.Application({
   resizeTo: canvasElement,
 });
@@ -18,6 +18,8 @@ let app = new PIXI.Application({
 //@ts-ignore
 //@ts-ignore
 //@ts-ignore any type checking.
+//csp change
+//canvasElement.appendChild(renderer.view);
 canvasElement.appendChild(app.view);
 
 const mainContainer = new PIXI.Container();
@@ -28,11 +30,12 @@ const screenshot = PIXI.Texture.from(
 );
 const webpageSprite = PIXI.Sprite.from(screenshot);
 webpageSprite.interactive = true;
+/*
 webpageSprite.addEventListener(`pointerdown`, () => {
   setState(`selectedElement`, "this is the new result");
   triggerEvent(`click`);
 });
-
+*/
 mainContainer.addChild(webpageSprite);
 app.stage.addChild(mainContainer);
 
@@ -79,176 +82,255 @@ app.renderer.on(`resize`, () => {
   }
 });
 
-///START CHRIS FUNCTIONS
+///START CHRIS CODE
+//test data loaded from test-data.ts
 //var DAS = properties.das;
-var DAS = new Array ({
-  "Corner Roundness": 5,
-  "Offset of top (y)": 395.96128953041926,
-  "Syllabus Canvas Width": 483.328125,
-  "Syllabus Canvas Height": 3623.03125,
-  "Shape ID": "shape_unique_id_849029",
-  "Modified Date": 1674151426823,
-  "Created Date": 1674151424836,
-  "Created By": "1648561974656x439262183960839300",
-  "Y Coordinate (500)": 395,
-  "X Coordinate (500)": 193,
-  "Mobile Screenshot": "1674151421044x594933091784470800",
-  "Box Width 250": 88,
-  "Box Height 250": 99,
-  "Attribute": "1673375655977x752951405907542000",
-  "Account Webpage": "1648649408910x887794807113668500",
-  "Stroke Width": 2,
-  "Shape": "Rectangle",
-  "X Coordinate (250)": 96,
-  "X Coordinate (960)": 370,
-  "Y Coordinate (250)": 197,
-  "Y Coordinate (960)": 758,
-  "_id": "1674151425031x842236848750460900"
-},
-{
-  "Corner Roundness": 5,
-  "Offset of top (y)": 228,
-  "Desktop Screenshot": "1670451431357x388596123285430460",
-  "Syllabus Canvas Width": 483,
-  "Syllabus Canvas Height": 712,
-  "Shape ID": "shape_unique_id_134457",
-  "Modified Date": 1674151406774,
-  "Created Date": 1674151403247,
-  "Created By": "1648561974656x439262183960839300",
-  "Y Coordinate (500)": 228,
-  "X Coordinate (500)": 95,
-  "Box Width 250": 30,
-  "Box Height 250": 25,
-  "Attribute": "1668510026384x892836158180425700",
-  "Account Webpage": "1648649408910x887794807113668500",
-  "Stroke Width": 2,
-  "Shape": "Rectangle",
-  "X Coordinate (250)": 47,
-  "X Coordinate (960)": 182,
-  "Y Coordinate (250)": 114,
-  "Y Coordinate (960)": 437,
-  "_id": "1674151403457x266515680396836860"
-},
-{
-  "Corner Roundness": 5,
-  "Offset of top (y)": 51,
-  "Desktop Screenshot": "1672862222970x520878899413092600",
-  "Syllabus Canvas Width": 485,
-  "Syllabus Canvas Height": 515,
-  "Shape ID": "shape_unique_id_819523",
-  "Modified Date": 1674062602996,
-  "Created Date": 1674062601183,
-  "Created By": "1664221186966x204293830276146340",
-  "Y Coordinate (500)": 51,
-  "X Coordinate (500)": 21,
-  "Box Width 250": 146,
-  "Box Height 250": 77.5,
-  "Attribute": "1668800394117x917004865047887900",
-  "Account Webpage": "1667262889527x858621114244434700",
-  "Stroke Width": 2,
-  "Shape": "Rectangle",
-  "X Coordinate (250)": 10,
-  "X Coordinate (960)": 40,
-  "Y Coordinate (250)": 25,
-  "Y Coordinate (960)": 97,
-  "_id": "1674062600971x785814322671779800"
-},
-{
-  "Corner Roundness": 5,
-  "Offset of top (y)": 122,
-  "Desktop Screenshot": "1672867270966x627421898112095900",
-  "Syllabus Canvas Width": 945,
-  "Syllabus Canvas Height": 4000,
-  "Shape ID": "shape_unique_id_653347",
-  "Modified Date": 1674059224359,
-  "Created Date": 1674059222796,
-  "Created By": "1664221186966x204293830276146340",
-  "Y Coordinate (500)": 63,
-  "X Coordinate (500)": 29,
-  "Box Width 250": 30.729166666666668,
-  "Box Height 250": 13.541666666666668,
-  "Attribute": "1668800394117x917004865047887900",
-  "Account Webpage": "1672867250672x906510004638974000",
-  "Stroke Width": 2,
-  "Shape": "Rectangle",
-  "X Coordinate (250)": 14,
-  "X Coordinate (960)": 57,
-  "Y Coordinate (250)": 31,
-  "Y Coordinate (960)": 122,
-  "_id": "1674059222456x786064976190898200"
-},
-{
-  "Corner Roundness": 5,
-  "Offset of top (y)": 32,
-  "Desktop Screenshot": "1672867270966x627421898112095900",
-  "Syllabus Canvas Width": 960,
-  "Syllabus Canvas Height": 4000,
-  "Shape ID": "shape_unique_id_884652",
-  "Modified Date": 1674046122447,
-  "Created Date": 1674046115188,
-  "Created By": "1667849232139x190159762978082900",
-  "Y Coordinate (500)": 16,
-  "X Coordinate (500)": 10,
-  "Box Width 250": 38.802083333333336,
-  "Box Height 250": 17.96875,
-  "Attribute": "1668800394117x917004865047887900",
-  "Account Webpage": "1672867250672x906510004638974000",
-  "Stroke Width": 2,
-  "Shape": "Rectangle",
-  "X Coordinate (250)": 5,
-  "X Coordinate (960)": 21,
-  "Y Coordinate (250)": 8,
-  "Y Coordinate (960)": 32,
-  "_id": "1674046114484x384901095148486660"
-});
 //var att = properties.att
-var att = new Array ({ "Latest Volume": 346, "Related Webpages": [ "1648649408910x887794807113668500" ], "Created Date": 1673375665144, "Name": "CTA", "Account": "1648562004649x223328173625704450", "Modified Date": 1674151427900, "Created By": "1648561974656x439262183960839300", "Average Distance from top": 236, "Color": "4", "Name Search": "cta", "Last Used": 1674151426414, "_id": "1673375655977x752951405907542000" }, { "Latest Volume": 358, "Related Webpages": [ "1648649408910x887794807113668500", "1648649415130x341237624746570240" ], "Created Date": 1668510027553, "Name": "Attribute 3", "Account": "1648562004649x223328173625704450", "Modified Date": 1674151407928, "Created By": "1648561974656x439262183960839300", "Average Distance from top": 138, "Color": "#ff00ff", "Name Search": "attribute 3", "Last Used": 1674151406474, "_id": "1668510026384x892836158180425700" }, { "Latest Volume": 15442, "Related Webpages": [ "1664221313711x475501364962342100", "1664223419885x108644029860312400", "1664221316045x125346515221780750", "1664221313698x632940115935128000", "1672867250672x906510004638974000", "1667262889527x858621114244434700" ], "Created Date": 1668800409315, "Name": "MY attribute", "Account": "1664221229355x903532045837271000", "Modified Date": 1674147291058, "Created By": "1664221186966x204293830276146340", "Average Distance from top": 269, "Color": "#38761d", "Name Search": "my attribute", "Last Used": 1674147290378, "_id": "1668800394117x917004865047887900" }, { "Latest Volume": 15442, "Related Webpages": [ "1664221313711x475501364962342100", "1664223419885x108644029860312400", "1664221316045x125346515221780750", "1664221313698x632940115935128000", "1672867250672x906510004638974000", "1667262889527x858621114244434700" ], "Created Date": 1668800409315, "Name": "MY attribute", "Account": "1664221229355x903532045837271000", "Modified Date": 1674147291058, "Created By": "1664221186966x204293830276146340", "Average Distance from top": 269, "Color": "#38761d", "Name Search": "my attribute", "Last Used": 1674147290378, "_id": "1668800394117x917004865047887900" }, { "Latest Volume": 15442, "Related Webpages": [ "1664221313711x475501364962342100", "1664223419885x108644029860312400", "1664221316045x125346515221780750", "1664221313698x632940115935128000", "1672867250672x906510004638974000", "1667262889527x858621114244434700" ], "Created Date": 1668800409315, "Name": "MY attribute", "Account": "1664221229355x903532045837271000", "Modified Date": 1674147291058, "Created By": "1664221186966x204293830276146340", "Average Distance from top": 269, "Color": "#38761d", "Name Search": "my attribute", "Last Used": 1674147290378, "_id": "1668800394117x917004865047887900" });
 //var colors = properties.colors;
-var colors = new Array ("57d9a3", "ff00ff", "38761d", "38761d", "38761d");
+//declare bubble
+//declare
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = true;
+const rectangles = [];
 
+// Find the rectangle with the specified name
+function findRect(name) {
+  const foundRectangle = rectangles.find((r) => r.name === name);  
+  if (foundRectangle) {return foundRectangle}
+}
 //loads & reformats Drawn Attribute Snippets
 function loadDAS(das) {
-  das.forEach((das, index) => {
-    //var rect = Object.values(das);
-    //console.log(rect);
-//will need placeholder for color. may need to generate specific 
-createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], colors[index], das['_id']);
-}) 
+    das.forEach((das, index) => {
+        //var rect = Object.values(das);
+        //console.log(rect);
+        //will need placeholder for color. may need to generate specific 
+        createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], colors[index], das['_id']);
+    })
 }
-
-//creates rectangles based on data
+//creates rectangles based on data PLACEHOLDER
 function createRect(x, y, w, h, c, id) {
-  // Create a new rectangle graphic using the calculated dimensions
-  const graphics = new PIXI.Graphics();
-  graphics.beginFill(c);
-  graphics.drawRect(x, y, w, h); 
-  graphics.endFill();
-  graphics.interactive = true;
-  graphics.on('pointerdown', (event) => { onClick(id);console.log(id); });
-  app.stage.addChild(graphics);
+    // Create a new rectangle graphic using the calculated dimensions
+    const graphics = new PIXI.Graphics();
+    graphics.beginFill(c);
+    graphics.drawRect(x, y, w, h);
+    graphics.endFill();
+    graphics.interactive = true;
+    graphics.on('pointerdown', (event) => {
+        onClick(id);
+        //console.log(id);
+    });
+    //set hitArea for dragging
+    const hitArea = new PIXI.Rectangle(x, y, w, h);
+    graphics.hitArea = hitArea;
+    mainContainer.addChild(graphics);
+    rectangles.push(graphics);
 
 }
-function onClick(id) { 
+//click functions on rectangles
+function onClick(id) {
 
-  // Clear the stage
-  app.stage.removeChildren();
+    // Clear the stage
+    mainContainer.removeChildren();
 
-  // Add the image back to the stage
-  //app.stage.addChild(bunny);
-  if (id > 2) {
-rects.forEach((rect, index) => {
-createRect(rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
-})
-  } else if (id = 1)  {das.forEach((das, index) => {
-      //console.log(Object.keys(das));
-      var rect = Object.values(das);
-      console.log(rect);
-createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], "0xDE3249", 5);
-}) }
-  else {
-          rects2.forEach((rect, index) => {
-createRect(rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
-})
-  }
+    mainContainer.addChild(screenshot);
+    if (id > 2) {
+        rects.forEach((rect, index) => {
+            createRect(rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
+        })
+    } else if (id = 1) {
+        DAS.forEach((das, index) => {
+            //console.log(Object.keys(das));
+            var rect = Object.values(das);
+            //console.log(rect);
+            createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], "0xDE3249", 5);
+        })
+    } else {
+        rects2.forEach((rect, index) => {
+            createRect(rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
+        })
+    }
+}
+//image loader
+function loadImage(im) {
+    let ss = PIXI.Texture.from(im);
+    let wpSprite = PIXI.Sprite.from(ss);
+    wpSprite.interactive = true;
+    // Add the image back to the container
+    mainContainer.addChild(wpSprite);
+}
+//adds a label PLACEHOLDER
+function addLabel(rect, label1) {
+    const label = new PIXI.Text(label1, {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fill: 0x000000,
+    });
+    label.position.set(rect.x + 20, rect.y + 20);
+    console.log("label", rect.x, rect.y, rect, rect.getBounds());
+    rect.addChild(label);
 }
 //loadDAS(DAS);
+
+//Listeners
+
+mainContainer.on('pointerup', (event) => {
+    if (!isDrawing) return;
+
+    // Clear the stage
+    mainContainer.removeChildren();
+
+    // Add the image back to the stage
+    mainContainer.addChild(webpageSprite);
+
+    // Add all previously added rectangles back to the stage
+    rectangles.forEach((r) => mainContainer.addChild(r));
+
+    // Save the ending position of the pointer
+    endX = event.clientX;
+    endY = event.clientY;
+    isDrawing = false;
+
+    // Calculate the dimensions of the rectangle
+    const width = endX - startX;
+    const height = endY - startY;
+
+    //stop small box creation - Placeholder
+    if (width < 20) return;
+    if (height < 20) return;
+
+    // Create a new rectangle graphic using the calculated dimensions
+    const rectangle = new PIXI.Graphics();
+    rectangle.beginFill(0xFFFF00, .5);
+    rectangle.drawRect(startX, startY, width, height);
+    rectangle.endFill();
+    rectangle.interactive = true;
+    rectangle.interactive = false;
+    rectangle.name = (Math.random().toString(16).substr(2, 8));
+
+
+    //set hitArea for dragging
+    const hitArea = new PIXI.Rectangle(startX, startY, width, height);
+    rectangle.hitArea = hitArea;
+
+    //add a hand
+    rectangle.cursor = 'hand';
+
+    if (logging) {
+        console.log('rectangle creation', rectangle);
+    }
+
+    ///drag events
+    rectangle.on('mousedown', () => {
+        rectangle.interactive = true; // Make the rectangle interactive
+        if (logging) {
+            console.log('mousedown-dragtrue');
+        }
+    });
+    rectangle.on('mousemove', (event) => {
+        if (!rectangle.interactive) return;
+        if (isDrawing) return;
+        // Update the position of the rectangle
+        rectangle.position.x += event.data.originalEvent.movementX;
+        rectangle.position.y += event.data.originalEvent.movementY;
+        /*reset hitArea for dragging - NEEDS WORK
+        console.log('oldhitArea', rectangle.position.x, rectangle.position.y,rectangle.hitArea);
+        let hitArea = new PIXI.Rectangle(rectangle.position.x, rectangle.position.y, rectangle.hitArea.width, rectangle.hitArea.height);
+        rectangle.hitArea = hitArea;
+        console.log('newhitArea', rectangle.hitArea);
+        */
+        if (logging) {
+            console.log('mousemove');
+        }
+    });
+    rectangle.on('mouseup', () => {
+        rectangle.interactive = false; // Stop the dragging
+        if (logging) {
+            console.log('mouseup-dragfalse');
+        }
+        rectangles.forEach((r) => r.interactive = false);
+    });
+
+    // Add the rectangle to the stage and the list of rectangles
+    rectangles.push(rectangle);
+
+    //console.log("pointerup", rectangle.x, rectangle.y, rectangle);
+    mainContainer.addChild(rectangle);
+    //console.log("afteradd", rectangle.x, rectangle.y, rectangle);
+
+    const x = rectangle.position.x;
+    const y = rectangle.position.y;
+    //    addLabel(rectangle, rectangle.name);
+    const label = new PIXI.Text(rectangle.name, {
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fill: 0x000000,
+    });
+    label.position.set(rectangle.getBounds().x + 20, rectangle.getBounds().y + 20);
+    if (logging) {
+        console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds());
+    }
+    rectangle.addChild(label);
+
+});
+
+mainContainer.on('mousedown', (event) => {
+    // Check if the mouse is over any of the rectangles
+    if (logging) {
+        console.log('listener mousedown');
+    }
+    for (const rectangle of rectangles) {
+        //console.log('rectangle,event', rectangle, event);
+        if (rectangle.hitArea.contains(event.offsetX, event.offsetY)) {
+            // The mouse is over the rectangle, don't start drawing
+            //console.log('over rectangle, do not draw');
+            return;
+        }
+    }
+    // The mouse is not over any of the rectangles, start drawing
+    isDrawing = true;
+    startX = event.clientX;
+    startY = event.clientY;
+});
+
+mainContainer.on('mouseup', () => {
+    isDrawing = false;
+    if (logging) {
+        console.log('Lmouseup');
+    }
+});
+
+mainContainer.on('pointermove', (event) => {
+    if (logging) {
+        console.log('Lpointermove', isDrawing);
+    }
+    if (!isDrawing) return;
+
+    // Clear the stage
+    mainContainer.removeChildren();
+
+    // Add the image back to the stage
+    mainContainer.addChild(webpageSprite);
+
+    // Calculate the current position of the pointer
+    endX = event.clientX;
+    endY = event.clientY;
+
+    // Calculate the dimensions of the rectangle
+    const width = endX - startX;
+    const height = endY - startY;
+
+    // Create a new rectangle graphic using the calculated dimensions
+
+    const rectangle = new PIXI.Graphics();
+    rectangle.beginFill(0x0000FF, 0.5); // Transparent blue
+    rectangle.drawRect(startX, startY, width, height);
+    rectangle.endFill();
+
+
+    // Add the rectangle to the stage
+    mainContainer.addChild(rectangle);
+
+    // Add all previously added rectangles back to the stage
+    rectangles.forEach((r) => mainContainer.addChild(r));
+});

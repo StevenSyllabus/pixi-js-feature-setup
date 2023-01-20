@@ -86,7 +86,6 @@ function handleResize(e) {
 //var DAS = properties.das;
 //var att = properties.att
 //var colors = properties.colors;
-//declare bubble
 //declare
 let startX, startY, endX, endY;
 let isDrawing = false;

@@ -35,78 +35,102 @@ app.stage.addChild(mainContainer);
 //end of screenshot setup
 
 //**begin creating the scrollbar */
+function createScrollBar(mainContainer) {
+  const maxScroll = mainContainer.height - app.view.height;
+  const scrollbar = new PIXI.Graphics();
+  scrollbar.interactive = true;
+  scrollbar.height = app.view.height;
+  scrollbar.beginFill(0x808080);
+  scrollbar.drawRect(
+    app.view.width - 8,
+    0,
+    14,
+    app.view.height * (app.view.height / mainContainer.height)
+  );
 
-const maxScroll = mainContainer.height - app.view.height;
-const scrollbar = new PIXI.Graphics();
-scrollbar.interactive = true;
-scrollbar.height = app.view.height;
-scrollbar.beginFill(0x808080);
-scrollbar.drawRect(
-  app.view.width - 8,
-  0,
-  14,
-  app.view.height * (app.view.height / mainContainer.height)
-);
+  scrollbar.endFill();
 
-scrollbar.endFill();
+  scrollbar.addEventListener("pointerdown", (e) => {
+    console.log(`scrollbar pointerdown`);
+    mainDivContainer.pressed = true;
+    scrollbar.lastY = e.data.global.y;
+    console.log(e.data);
+    console.log(scrollbar);
+    scrollbar.lastTop = scrollbar.y;
 
-scrollbar.addEventListener("pointerdown", (e) => {
-  console.log(`scrollbar pointerdown`);
-  mainDivContainer.pressed = true;
-  scrollbar.lastY = e.data.global.y;
-  console.log(e.data);
-  scrollbar.lastTop = parseFloat(scrollbar.y);
-  console.log(`scrollbar.lastY: ${scrollbar.lastY}`);
-  console.log(mainDivContainer.pressed);
-});
+    console.log(`scrollbar.lastY: ${scrollbar.lastY}`);
+    console.log(mainDivContainer.pressed);
+  });
 
-scrollbar.addEventListener("pointerup", (e) => {
-  console.log(`scrollbar pointerup`);
-  mainDivContainer.pressed = false;
-  console.log(mainDivContainer.pressed);
-});
+  scrollbar.addEventListener("pointerup", (e) => {
+    console.log(`scrollbar pointerup`);
+    mainDivContainer.pressed = false;
+    console.log(mainDivContainer.pressed);
+  });
 
-scrollbar.addEventListener("pointerupoutside", (e) => {
-  console.log(`scrollbar pointerupoutside`);
-  mainDivContainer.pressed = false;
-  console.log(mainDivContainer.pressed);
-});
-window.addEventListener(
-  "pointermove",
-  (e) => {
-    if (mainDivContainer.pressed) {
-      console.log(e.y);
+  scrollbar.addEventListener("pointerupoutside", (e) => {
+    console.log(`scrollbar pointerupoutside`);
+    mainDivContainer.pressed = false;
+    console.log(mainDivContainer.pressed);
+  });
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      if (mainDivContainer.pressed) {
+        console.log(e.y);
 
-      const scrollPercent = -mainContainer.position.y / maxScroll;
-      console.log(`scrollPercent: ${scrollPercent}`);
+        const scrollPercent = -mainContainer.position.y / maxScroll;
+        console.log(`scrollPercent: ${scrollPercent}`);
 
-      const scrollbarHeight =
-        app.view.height * (app.view.height / mainContainer.height);
-      const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-      const mouseDif = e.y - scrollbar.lastY;
-      const newTop = scrollbar.lastTop + mouseDif;
-      const scrollPercent2 = newTop / (app.view.height - scrollbarHeight);
-      const newScroll = Math.max(-scrollPercent2 * maxScroll);
-      console.log(`newScroll: ${newScroll}`);
+        const scrollbarHeight =
+          app.view.height * (app.view.height / mainContainer.height);
+        const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
+        const mouseDif = e.y - scrollbar.lastY;
+        console.log(`scrollbar.lastTop`, scrollbar.lastTop);
+        const newTop = scrollbar.lastTop + mouseDif;
+        const scrollPercent2 = newTop / (app.view.height - scrollbarHeight);
+        const newScroll = Math.max(-scrollPercent2 * maxScroll);
+        console.log(`newScroll: ${newScroll}`);
 
-      if (scrollPercent2 > 0 && scrollPercent2 < 1) {
-        mainContainer.position.y = newScroll;
-        scrollbar.clear();
-        scrollbar.beginFill(0x808080);
-        scrollbar.drawRect(app.view.width - 8, newTop, 14, scrollbarHeight);
-        scrollbar.endFill();
+        if (scrollPercent2 > 0 && scrollPercent2 < 1) {
+          mainContainer.position.y = newScroll;
+          scrollbar.clear();
+          scrollbar.beginFill(0x808080);
+          scrollbar.drawRect(app.view.width - 8, newTop, 14, scrollbarHeight);
+          scrollbar.endFill();
+        }
       }
-    }
-  },
-  { passive: true }
-);
+    },
+    { passive: true }
+  );
 
-app.stage.addChild(scrollbar);
-//update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
-canvasElement.addEventListener("wheel", scrollCanvas, { passive: true });
-//*end of scrollbar setup */
+  app.stage.addChild(scrollbar);
+  //update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
+  canvasElement.addEventListener("wheel", scrollCanvas, { passive: true });
+  //*end of scrollbar setup */
 
-//resize the container and scrollbar when the window is resized
+  //resize the container and scrollbar when the window is resized
+
+  function scrollCanvas(event) {
+    // Update the container's y position based on the mouse wheel delta
+    mainContainer.position.y += event.deltaY;
+
+    // Clamp the container's position so that it can't scroll past the max scroll value
+    mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
+    mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+
+    // Update the scrollbar position and size based on the container's scroll position
+    const scrollPercent = -mainContainer.position.y / maxScroll;
+    const scrollbarHeight =
+      app.view.height * (app.view.height / mainContainer.height);
+    const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
+    scrollbar.clear();
+    scrollbar.beginFill(0x808080);
+    scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
+    scrollbar.endFill();
+  }
+}
+
 app.renderer.on(`resize`, handleResize);
 function handleResize(e) {
   console.log(`resize`);
@@ -123,21 +147,4 @@ function handleResize(e) {
   }
 }
 
-function scrollCanvas(event) {
-  // Update the container's y position based on the mouse wheel delta
-  mainContainer.position.y += event.deltaY;
-
-  // Clamp the container's position so that it can't scroll past the max scroll value
-  mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
-  mainContainer.position.y = Math.min(mainContainer.position.y, 0);
-
-  // Update the scrollbar position and size based on the container's scroll position
-  const scrollPercent = -mainContainer.position.y / maxScroll;
-  const scrollbarHeight =
-    app.view.height * (app.view.height / mainContainer.height);
-  const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-  scrollbar.clear();
-  scrollbar.beginFill(0x808080);
-  scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
-  scrollbar.endFill();
-}
+createScrollBar(mainContainer);

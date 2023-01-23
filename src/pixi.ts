@@ -35,7 +35,9 @@ webpageSprite.interactive = true;
  */
 mainContainer.addChild(webpageSprite);
 //scale the container to the width of the canvas. This scales everything inside
-mainContainer.scale.set(app.view.width / mainContainer.width);
+
+webpageSprite.scale.set(app.view.width / webpageSprite.width);
+
 app.stage.addChild(mainContainer);
 //end of screenshot setup
 
@@ -46,7 +48,11 @@ app.renderer.on(`resize`, handleResize);
 function handleResize(e) {
   console.log(`resize`);
   //currently this doesn't work.It flashes and doesn't resize properly
-  mainContainer.scale.set(app.view.width / mainContainer.width);
+  mainContainer.children.forEach((child) => {
+    //fix the flashing ever other resize
+
+    child.scale.set(app.view.width / child.width);
+  });
 }
 
 function createScrollBar(mainContainer) {
@@ -266,8 +272,8 @@ mainContainer.on("pointerup", (event) => {
   rectangles.forEach((r) => mainContainer.addChild(r));
 
   // Save the ending position of the pointer
-  endX = event.clientX;
-  endY = event.clientY;
+  endX = event.global.x;
+  endY = event.global.y;
   isDrawing = false;
 
   // Calculate the dimensions of the rectangle
@@ -360,7 +366,7 @@ mainContainer.on("pointerup", (event) => {
   rectangle.addChild(label);
 });
 
-mainContainer.on("mousedown", (event) => {
+mainContainer.addEventListener("pointerdown", (event) => {
   // Check if the mouse is over any of the rectangles
   if (logging) {
     console.log("listener mousedown");
@@ -375,9 +381,9 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
-  console.log(event);
-  startX = event.clientX;
-  startY = event.clientY;
+
+  startX = event.global.x - mainContainer.position.x;
+  startY = event.global.y - mainContainer.position.y;
 });
 
 mainContainer.on("mouseup", () => {
@@ -387,7 +393,7 @@ mainContainer.on("mouseup", () => {
   }
 });
 
-mainContainer.on("pointermove", (event) => {
+mainContainer.addEventListener("pointermove", (event) => {
   if (logging) {
     console.log("Lpointermove", isDrawing);
   }
@@ -400,9 +406,8 @@ mainContainer.on("pointermove", (event) => {
   mainContainer.addChild(webpageSprite);
 
   // Calculate the current position of the pointer
-  endX = event.clientX;
-  endY = event.clientY;
-
+  endX = event.global.x - mainContainer.position.x;
+  endY = event.global.y - mainContainer.position.y;
   // Calculate the dimensions of the rectangle
   const width = endX - startX;
   const height = endY - startY;

@@ -262,19 +262,11 @@ function addLabel(rect, label1) {
 mainContainer.on("pointerup", (event) => {
   if (!isDrawing) return;
 
-  // Clear the stage
-  mainContainer.removeChildren();
-
-  // Add the image back to the stage
-  mainContainer.addChild(webpageSprite);
-
-  // Add all previously added rectangles back to the stage
-  rectangles.forEach((r) => mainContainer.addChild(r));
-
   // Save the ending position of the pointer
-  endX = event.global.x;
-  endY = event.global.y;
+  endX = event.global.x - mainContainer.x;
+  endY = event.global.y - mainContainer.y;
   isDrawing = false;
+  console.log(`testest`);
 
   // Calculate the dimensions of the rectangle
   const width = endX - startX;
@@ -291,6 +283,7 @@ mainContainer.on("pointerup", (event) => {
   rectangle.endFill();
   rectangle.interactive = true;
   rectangle.interactive = false;
+
   rectangle.name = Math.random().toString(16).substr(2, 8);
 
   //set hitArea for dragging
@@ -350,10 +343,7 @@ mainContainer.on("pointerup", (event) => {
     fontSize: 24,
     fill: 0x000000,
   });
-  label.position.set(
-    rectangle.getBounds().x + 20,
-    rectangle.getBounds().y + 20
-  );
+  label.position.set(startX + 20, startY + 20);
   if (logging) {
     console.log(
       "label",

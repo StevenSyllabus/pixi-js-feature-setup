@@ -27,7 +27,7 @@ app.stage.addChild(mainContainer);
 
 //create a sprite for the webpage and add it to the container
 const screenshot = PIXI.Texture.from(
-  `https://s3.amazonaws.com/appforest_uf/d110/f1670453940647x598239596018917500/0d8918841cc9b704bfe558554a58858a73379813e9a4d7ba0caaceae3dfc27a2`
+  `https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812?ignore_imgix=true`
 );
 const webpageSprite = PIXI.Sprite.from(screenshot);
 webpageSprite.interactive = true;
@@ -41,20 +41,12 @@ app.stage.addChild(mainContainer);
 
 //**begin creating the scrollbar */
 
+//this function allows us to tap into the canvas's resize event and update the contents how we need to.
 app.renderer.on(`resize`, handleResize);
 function handleResize(e) {
   console.log(`resize`);
-  const scrollPercent = -mainContainer.position.y / maxScroll;
-  const scrollbarHeight =
-    app.view.height * (app.view.height / mainContainer.height);
-  const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-  scrollbar.clear();
-  scrollbar.beginFill(0x808080);
-  scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
-  scrollbar.endFill();
-  if (app.view.width !== mainContainer.width) {
-    mainContainer.scale.set(app.view.width / mainContainer.width);
-  }
+  //currently this doesn't work.It flashes and doesn't resize properly
+  mainContainer.scale.set(app.view.width / mainContainer.width);
 }
 
 function createScrollBar(mainContainer) {
@@ -137,7 +129,7 @@ function createScrollBar(mainContainer) {
 
   function scrollCanvas(event) {
     // Update the container's y position based on the mouse wheel delta
-    mainContainer.position.y += event.deltaY;
+    mainContainer.position.y -= event.deltaY;
 
     // Clamp the container's position so that it can't scroll past the max scroll value
     mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
@@ -383,6 +375,7 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
+  console.log(event);
   startX = event.clientX;
   startY = event.clientY;
 });

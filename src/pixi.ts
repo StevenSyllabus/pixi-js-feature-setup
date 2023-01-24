@@ -37,10 +37,21 @@ const screenshot = PIXI.Texture.from(
   `https://d1muf25xaso8hp.cloudfront.net/https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812`
 );
 
+console.log(screenshot);
 const webpageSprite = PIXI.Sprite.from(screenshot);
+webpageSprite.filters = null;
+
 webpageSprite.interactive = true;
 mainContainer.addChild(webpageSprite);
 //scale the container to the width of the canvas. This scales everything inside
+
+const intialWebpageWidth = webpageSprite.width;
+const intialWebpageHeight = webpageSprite.height;
+webpageSprite.intialWidth = webpageSprite.width;
+const intialCanvasWidth = app.view.width;
+const intialCanvasHeight = app.view.height;
+const intialScale = intialCanvasWidth / intialWebpageWidth;
+console.log(`intialScale: ${intialScale}`);
 
 webpageSprite.scale.set(app.view.width / webpageSprite.width);
 
@@ -51,14 +62,22 @@ app.stage.addChild(mainContainer);
 
 //this function allows us to tap into the canvas's resize event and update the contents how we need to.
 app.renderer.on(`resize`, handleResize);
+let resizeTimeout = null;
 function handleResize(e) {
+  const intialSize = app.view.width;
   console.log(`resize`);
-  //currently this doesn't work.It flashes and doesn't resize properly
+  webpageSprite.scale.set(app.view.width / intialWebpageWidth);
   mainContainer.children.forEach((child) => {
-    //fix the flashing ever other resize
-
-    child.scale.set(app.view.width / child.width);
+    child.scale.set(app.view.width / intialWebpageWidth);
+    console.log(`child.intialWidth: ${child.intialWidth}`);
   });
+  //optional timeout to prevent the resize from firing too many times
+  clearTimeout(resizeTimeout);
+
+  resizeTimeout = setTimeout(() => {
+    console.log(`resize timeout`);
+    console.log(app.view.width / webpageSprite.intialWidth);
+  }, 100);
 }
 
 function createScrollBar(mainContainer) {
@@ -298,6 +317,7 @@ mainContainer.on("pointerup", (event) => {
   rectangle.endFill();
   rectangle.interactive = true;
   rectangle.interactive = false;
+  rectangle.intialWidth = width;
 
   rectangle.name = Math.random().toString(16).substr(2, 8);
 

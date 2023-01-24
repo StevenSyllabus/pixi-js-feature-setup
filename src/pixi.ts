@@ -411,7 +411,6 @@ mainContainer.addEventListener("pointerdown", (event) => {
     }
   }
   // The mouse is not over any of the rectangles, start drawing
-  console.log(`clicky`);
   isDrawing = true;
 
   startX = event.global.x - mainContainer.position.x;

@@ -15,7 +15,14 @@ const mainDivContainer = <HTMLDivElement>(
 //intialize pixi
 const renderer = PIXI.autoDetectRenderer({});
 let app = new PIXI.Application({
+  autoStart: true,
+  autoDensity: false,
+  resolution: 1,
+  backgroundColor: 0xffffff,
+  backgroundAlpha: 1,
   resizeTo: canvasElement,
+  antialias: false,
+  hello: true,
 });
 //csp change
 //canvasElement.appendChild(renderer.view);
@@ -27,12 +34,11 @@ app.stage.addChild(mainContainer);
 
 //create a sprite for the webpage and add it to the container
 const screenshot = PIXI.Texture.from(
-  `https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812?ignore_imgix=true`
+  `https://d1muf25xaso8hp.cloudfront.net/https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812`
 );
+
 const webpageSprite = PIXI.Sprite.from(screenshot);
 webpageSprite.interactive = true;
-/*
- */
 mainContainer.addChild(webpageSprite);
 //scale the container to the width of the canvas. This scales everything inside
 
@@ -58,6 +64,8 @@ function handleResize(e) {
 function createScrollBar(mainContainer) {
   const maxScroll = mainContainer.height - app.view.height;
   const scrollbar = new PIXI.Graphics();
+  let scrolling = false;
+  let scrollingTimeout = null;
   scrollbar.interactive = true;
   scrollbar.height = app.view.height;
   scrollbar.beginFill(0x808080);
@@ -128,12 +136,14 @@ function createScrollBar(mainContainer) {
   app.stage.addChild(scrollbar);
 
   //update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
-  canvasElement.addEventListener("wheel", scrollCanvas, { passive: true });
+  canvasElement.addEventListener("wheel", scrollCanvas, { passive: false });
   //*end of scrollbar setup */
 
   //resize the container and scrollbar when the window is resized
 
   function scrollCanvas(event) {
+    event.preventDefault();
+    document.body.style.overflow = "hidden";
     // Update the container's y position based on the mouse wheel delta
     mainContainer.position.y -= event.deltaY;
 
@@ -150,6 +160,11 @@ function createScrollBar(mainContainer) {
     scrollbar.beginFill(0x808080);
     scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
     scrollbar.endFill();
+    clearTimeout(scrollingTimeout);
+    scrollingTimeout = setTimeout(() => {
+      console.log("Show the content again because the user stopped scrolling");
+      document.body.style.overflow = "auto";
+    }, 100);
   }
 }
 createScrollBar(mainContainer);

@@ -10,7 +10,9 @@ const canvasElement = <HTMLDivElement>document.getElementById(`app`);
 const mainDivContainer = <HTMLDivElement>(
   document.getElementById(`mainContainer`)
 );
+const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 //--end html container setup, and pixi core element setup
+PIXI.settings.ROUND_PIXELS = true;
 
 //intialize pixi
 const renderer = PIXI.autoDetectRenderer({});
@@ -33,36 +35,45 @@ const mainContainer = new PIXI.Container();
 app.stage.addChild(mainContainer);
 
 //create a sprite for the webpage and add it to the container
-const screenshot = PIXI.Texture.from(
-  `https://d1muf25xaso8hp.cloudfront.net/https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812`
-);
+let intialWebpageWidth,
+  intialWebpageHeight,
+  intialCanvasWidth,
+  intialCanvasHeight,
+  intialScale,
+  webpageSprite;
 
-console.log(screenshot);
-const webpageSprite = PIXI.Sprite.from(screenshot);
-webpageSprite.filters = null;
-
-webpageSprite.interactive = true;
-mainContainer.addChild(webpageSprite);
-//scale the container to the width of the canvas. This scales everything inside
-
-const intialWebpageWidth = webpageSprite.width;
-const intialWebpageHeight = webpageSprite.height;
-webpageSprite.intialWidth = webpageSprite.width;
-const intialCanvasWidth = app.view.width;
-const intialCanvasHeight = app.view.height;
-const intialScale = intialCanvasWidth / intialWebpageWidth;
-console.log(`intialScale: ${intialScale}`);
-
-webpageSprite.scale.set(app.view.width / webpageSprite.width);
-
-app.stage.addChild(mainContainer);
-//end of screenshot setup
-
-//**begin creating the scrollbar */
-
-//this function allows us to tap into the canvas's resize event and update the contents how we need to.
-app.renderer.on(`resize`, handleResize);
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = true;
+const rectangles = [];
 let resizeTimeout = null;
+
+const screenshot = PIXI.Texture.fromURL(
+  `${imgixBaseURL}https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${canvasElement.clientWidth}`
+).then((texture) => {
+  console.log(`finished the texture`);
+  console.log(texture);
+  texture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
+
+  webpageSprite = PIXI.Sprite.from(texture);
+  console.log(`finished the sprite`);
+  console.log(webpageSprite);
+  intialWebpageWidth = webpageSprite.width;
+  intialWebpageHeight = webpageSprite.height;
+  webpageSprite.intialWidth = webpageSprite.width;
+  mainContainer.addChild(webpageSprite);
+  mainContainer.interactive = true;
+
+  webpageSprite.scale.set(app.view.width / webpageSprite.width);
+
+  intialCanvasWidth = app.view.width;
+  intialCanvasHeight = app.view.height;
+  intialScale = intialCanvasWidth / intialWebpageWidth;
+  createScrollBar(mainContainer);
+});
+
+app.renderer.on(`resize`, handleResize);
+
 function handleResize(e) {
   const intialSize = app.view.width;
   console.log(`resize`);
@@ -186,7 +197,6 @@ function createScrollBar(mainContainer) {
     }, 100);
   }
 }
-createScrollBar(mainContainer);
 
 ///START CHRIS CODE
 //test data loaded from test-data.ts
@@ -194,10 +204,6 @@ createScrollBar(mainContainer);
 //var att = properties.att
 //var colors = properties.colors;
 //declare
-let startX, startY, endX, endY;
-let isDrawing = false;
-let logging = true;
-const rectangles = [];
 
 // Find the rectangle with the specified name
 function findRect(name) {
@@ -405,6 +411,7 @@ mainContainer.addEventListener("pointerdown", (event) => {
     }
   }
   // The mouse is not over any of the rectangles, start drawing
+  console.log(`clicky`);
   isDrawing = true;
 
   startX = event.global.x - mainContainer.position.x;

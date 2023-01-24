@@ -1,10 +1,19 @@
 //@ts-nocheck this turns off typesccript checks for the entire file
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
+//start C Declare before import
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = false;
+let selected, over;
+const rectangles = [];
+//end C Declare
+
 import * as PIXI from "pixi.js";
 import '@pixi/events';
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
-import { DAS, att, colors, rects, rects2 } from "./test-data"
+import { DAS, att, colors, rects, rects2 } from "./test-data";
+import { onDragStart, onDragEnd, onDragMove, mouseOut, mouseOver, handleResizer, removeRectangle, addDragHand, getStartCoordinates, changeRectColor, logDrag, logResize} from "./events";
 //--begin html container setup, and pixi core element setup
 //const canvasElement = document.getElementById(`app`);
 //const mainDivContainer = document.getElementById(`mainContainer`);
@@ -111,12 +120,6 @@ function handleResize(e) {
 //var DAS = properties.das;
 //var att = properties.att
 //var colors = properties.colors;
-//declare
-let startX, startY, endX, endY;
-let isDrawing = false;
-let logging = true;
-let selected, over;
-const rectangles = [];
 
 // Find the rectangle with the specified name
 function findRect(name) {
@@ -214,13 +217,7 @@ mainContainer.on('pointerup', (event) => {
     endX = event.clientX;
     endY = event.clientY;
     isDrawing = false;
-/*
-    let coordinates = getStartCoordinates(startX,startY,endX,endY);
-    logging ? console.log("coord",coordinates) : null;
-    // Calculate the dimensions of the rectangle
-    const width = endX - startX;
-    const height = endY - startY;
-*///
+
     let createCoord = getStartCoordinates(startX,startY,endX,endY);
     logging ? console.log("createCoord",createCoord) : null;
 
@@ -249,56 +246,28 @@ mainContainer.on('pointerup', (event) => {
     //add a hand
     rectangle.cursor = 'hand';
 
-    if (logging) {
-        console.log('rectangle creation', rectangle, "hitArea", hitArea);
-    }
+    logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea) : null;
 
-    ///drag events
-    /*
-    rectangle.on('mousedown', () => {
-        rectangle.interactive = true; // Make the rectangle interactive
-        if (logging) {
-            console.log('mousedown-dragtrue');
-        }
-    });
-    rectangle.on('mousemove', (event) => {
-        if (!rectangle.interactive) return;
-        if (isDrawing) return;
-        // Update the position of the rectangle
-        rectangle.position.x += event.data.originalEvent.movementX;
-        rectangle.position.y += event.data.originalEvent.movementY;
-        /*reset hitArea for dragging - NEEDS WORK
-        console.log('oldhitArea', rectangle.position.x, rectangle.position.y,rectangle.hitArea);
-        let hitArea = new PIXI.Rectangle(rectangle.position.x, rectangle.position.y, rectangle.hitArea.width, rectangle.hitArea.height);
-        rectangle.hitArea = hitArea;
-        console.log('newhitArea', rectangle.hitArea);
-        
-        if (logging) {
-            console.log('mousemove');
-        }
-    });
-    rectangle.on('mouseup', () => {
-        rectangle.interactive = false; // Stop the dragging
-        if (logging) {
-            console.log('mouseup-dragfalse');
-        }
-        rectangles.forEach((r) => r.interactive = false);
-    });
-    */////
+
+    
  rectangle
-        .on('mouseover', mouseOver)
-        .on('mouseout', mouseOut)
-        .on('pointerdown', onDragStart)
-        .on('pointerup', onDragEnd)
-        .on('pointerupoutside', onDragEnd)
-        .on('pointermove', onDragMove);
-
+        //.on('mouseover', mouseOver)
+        //.on('mouseout', mouseOut)
+        .on('pointerdown', function(e){
+            logging ? console.log('rect-pointerdown',e.clientX, e.clientY) : null;
+            this.selected = true;
+            onDragStart(e,this,rectangles);}) 
+        .on('pointerup', function(e){
+            this.selected = false;
+            onDragEnd(e,this,rectangles);}) 
+        .on('pointerupoutside', function(e){
+            this.selected = false;
+            onDragEnd(e,this,rectangles);}) 
+        .on('pointermove', function(e){onDragMove(e,this,rectangles);}) 
     // Add the rectangle to the stage and the list of rectangles
     rectangles.push(rectangle);
-
-    //console.log("pointerup", rectangle.x, rectangle.y, rectangle);
+    
     mainContainer.addChild(rectangle);
-    //console.log("afteradd", rectangle.x, rectangle.y, rectangle);
 
     const x = rectangle.position.x;
     const y = rectangle.position.y;
@@ -309,29 +278,29 @@ mainContainer.on('pointerup', (event) => {
         fill: 0x000000,
     });
     label.position.set(rectangle.getBounds().x + 20, rectangle.getBounds().y + 20);
-    if (logging) {
-        console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds());
-    }
+    logging ? console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds()) : null;
     rectangle.addChild(label);
+    addDragHand(rectangle, mainContainer, rectangles, webpageSprite);
 
 });
 
 mainContainer.on('mousedown', (event) => {
     // Check if the mouse is over any of the rectangles
-    if (logging) {
-        console.log('listener mousedown');
-    }
-    for (const rectangle of rectangles) {
-        //console.log('rectangle,event,over', rectangle, event, over);
-        if (over = rectangle) {
+    logging ? console.log('listener mousedown') : null;
+    logging ? console.log("rectangles", rectangles) : null;
+    for (let rectangle of rectangles) {
+        logging ? console.log('rectangle selected?', rectangle.selected) : null;
+        if (rectangle.selected) {
             // The mouse is over the rectangle, don't start drawing
-            console.log('over rectangle, do not draw',"recthit",rectangle.hitArea,event.offsetX, event.offsetY, over);
-            rectangle.selected = true;
-            rectangle.interactive = true;
+            //console.log('over rectangle, do not draw',"recthit",rectangle.hitArea,event.offsetX, event.offsetY);
+            //rectangle.selected = true;
+            //rectangle.interactive = true;
             changeRectColor(rectangle,"0x0000FF");
+            logging ? console.log('returning',rectangle) : null;
             return;
-        } else if (over != rectangle) {rectangle.selected = false;}
-        console.log(rectangle,"recthit",rectangle.hitArea,event.offsetX, event.offsetY);
+
+        } 
+        logging ? console.log("recthit",rectangle.hitArea,event.offsetX, event.offsetY) : null;
     }
     // The mouse is not over any of the rectangles, start drawing
     isDrawing = true;
@@ -341,21 +310,14 @@ mainContainer.on('mousedown', (event) => {
 
 mainContainer.on('mouseup', () => {
     isDrawing = false;
-    if (logging) {
-        console.log('Lmouseup');
-    }
+    rectangles.forEach((r) => r.selected = false);
+    logging ? console.log('Lmouseup') : null;
 });
 
 mainContainer.on('pointermove', (event) => {
-    if (logging) {
-       // console.log('Lpointermove', isDrawing);
-    }
     if (!isDrawing) return;
-   // if (selected != null) return;
-
     // Clear the stage
     mainContainer.removeChildren();
-
     // Add the image back to the stage
     mainContainer.addChild(webpageSprite);
 
@@ -365,10 +327,7 @@ mainContainer.on('pointermove', (event) => {
 
     // Calculate the dimensions of the rectangle
     let coordinates = getStartCoordinates(startX,startY,endX,endY);
-    //logging ? console.log("coord",coordinates) : null;
-
-    //const width = endX - startX;
-    //height = endY - startY;
+    logging ? console.log("coord",coordinates) : null;
 
     // Create a new rectangle graphic using the calculated dimensions
 
@@ -377,7 +336,6 @@ mainContainer.on('pointermove', (event) => {
     rectangle.drawRect(coordinates.startRectX, coordinates.startRectY, coordinates.width, coordinates.height);
     rectangle.endFill();
 
-
     // Add the rectangle to the stage
     mainContainer.addChild(rectangle);
 
@@ -385,103 +343,3 @@ mainContainer.on('pointermove', (event) => {
     rectangles.forEach((r) => mainContainer.addChild(r));
 });
 
-//function for drawing in different directions
-function getStartCoordinates(startX,startY,endX,endY) {
-    var width, height, startRectX, startRectY;
-    (startX < endX) ? (width = endX - startX) : (width = startX - endX);
-    (startY < endY) ? (height = endY - startY) : (height = startY - endY);
-    (startX < endX) ? (startRectX = startX) : (startRectX = endX);
-    (startY < endY) ? (startRectY = startY) : (startRectY = endY);
-    return { startRectX, startRectY, width, height };
-}
-
-//dag events
-var logDrag = true;
-function onDragStart(e) {
-    
-    const mousePosition = e.data.global;
-    this.interactive = true; // Make the rectangle interactive
-    logDrag = true ? console.log("mousePosition",mousePosition) : null;
-    logDrag = true ? console.log("myRectanglePosition",this.myRectanglePosition) : null;
-    if ((mousePosition.x - this.myRectanglePosition[0]<30)
-     && (mousePosition.y-this.myRectanglePosition[1]<30)
-    ) {
-        logDrag = true ? console.log('Resizing Radius') : null;
-        this.resizingRadius=true
-        this.dragging = true;    
-        this.draggingOffset = [mousePosition.x - this.myRectanglePosition[0], mousePosition.y - this.myRectanglePosition[1]];
-    } else {
-        logDrag = true ? console.log('Dragging') : null;
-        this.dragging = true;
-        this.draggingOffset = [mousePosition.x - this.myRectanglePosition[0], mousePosition.y - this.myRectanglePosition[1]];
-    }
-}
-
-function onDragEnd(e) {
-    this.resizingRadius = false;
-    this.dragging = false;
-    this.selected = false;
-    changeRectColor(this, this.labelColor);
-    
-    this.interactive = false; // Stop the dragging
-        if (logging) {
-            console.log('DragEnd-dragfalse',this.labelColor);
-        }
-        rectangles.forEach((r) => r.interactive = false);
-}
-
-function onDragMove(e) {
-    //logDrag = true ? console.log('DraggingMove',this.selected,this,isDrawing) : null;
-    const mousePosition = e.data.global;
-    if (this.selected != true) return;
-    if (isDrawing) return;
-    logDrag = true ? console.log('DraggingMove',this.selected,this,isDrawing) : null;
-    
-        //var currentWidth = this.myRectanglePosition[2];
-
-        //this.myRectanglePosition[0] = mousePosition.x - this.draggingOffset[0];
-        //this.myRectanglePosition[1] = mousePosition.y - this.draggingOffset[1];
-        //this.myRectanglePosition[2] = currentWidth;
-
-
-        // Update the position of the rectangle
-        this.position.x += e.data.originalEvent.movementX;
-        this.position.y += e.data.originalEvent.movementY;
-        /*reset hitArea for dragging - NEEDS WORK
-        logDrag = true ? console.log('oldhitArea', rectangle.position.x, rectangle.position.y,rectangle.hitArea) : null;
-        this.hitArea. = new PIXI.Rectangle(rectangle.position.x, rectangle.position.y, rectangle.hitArea.width, rectangle.hitArea.height);
-        this.hitArea = hitArea;
-        console.log('newhitArea', rectangle.hitArea);
-        
-        logDrag = true ? console.log('mousemove') : null;
-        
-        }
-        */
-    
-}
-
-
-function mouseOver (e) {
-    
-    over = this;
-    console.log("mouseover, over",this,over);
-}
-
-function mouseOut (e) {
-    
-    over = null;
-    this.selected = null;
-    console.log("mouseout, this, over",this, over);
-}
-
-function changeRectColor (sq, color) {
-    logging ? console.log("changeColor") : null;
-    const square = sq;
-    console.log(square);
-    sq.clear();
-sq.beginFill(color, .5);
-sq.lineStyle(square.lineStyle);
-sq.drawRect(square.myRectanglePosition[0], square.myRectanglePosition[1], square.myRectanglePosition[2],square.myRectanglePosition[3]);
-logging ? console.log("squareDeets",square.myRectanglePosition[0], square.myRectanglePosition[1], square.myRectanglePosition[2],square.myRectanglePosition[3]) : null;
-sq.endFill();
-}

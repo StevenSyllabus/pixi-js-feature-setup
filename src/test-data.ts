@@ -1,4 +1,4 @@
-///START CHRIS FUNCTIONS
+///START CHRIS Test Data
 //var DAS = properties.das;
 var DAS = new Array({
     "Corner Roundness": 5,

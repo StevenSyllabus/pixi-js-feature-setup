@@ -326,8 +326,8 @@ label.position.set(
 logging ? console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds()) : null;
 rectangle.addChild(label);
 */
-//addResizeHand(rectangle, mainContainer, rectangles, webpageSprite);
-addDragHand(rectangle, mainContainer, rectangles, webpageSprite);
+addResizeHand(rectangle);
+addDragHand(rectangle, rectangles);
 }
 
 //image loader
@@ -444,10 +444,7 @@ mainContainer.on("pointermove", (event) => {
   rectangles.forEach((r) => mainContainer.addChild(r));
 });
 function addResizeHand(
-  rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
+  rectangle
 ) {
   const png = PIXI.Texture.from(
     `https://s3.amazonaws.com/appforest_uf/d110/f1674585363384x114691738198125620/drag-handle-corner.png?ignore_imgix=true`
@@ -480,6 +477,8 @@ function addResizeHand(
       onDragStartH(e,rectangle);
     })
     .on('pointermove', function(e){
+      rectangle.resizing = true;
+      isDrawing = false;
       onDragMoveH(e,rectangle);
   }) 
     .on("pointerup", function (e) {

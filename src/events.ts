@@ -107,9 +107,7 @@ export function getStartCoordinates(startX, startY, endX, endY) {
 
 export function addDragHand(
   rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
+  rectangles
 ) {
   const png = PIXI.Texture.from(
     `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`

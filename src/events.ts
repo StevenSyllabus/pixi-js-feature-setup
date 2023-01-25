@@ -3,9 +3,6 @@ let logDrag = false;
 let logResize = true;
 let isDrawing = false;
 let isResizing = false;
-var initialMousePosX,initialMousePosY,currentMousePosY,currentMousePosX;
-var initialRectWidth;
-var initialRectHeight;
 
 import * as PIXI from "pixi.js";
 export { logDrag, logResize, isResizing };
@@ -65,8 +62,14 @@ export function onDragMove(e, rectangle, rectangles) {
 
   rectangle.position.x += e.data.originalEvent.movementX;
   rectangle.position.y += e.data.originalEvent.movementY;
+  /*let createCoord = getStartCoordinates(rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
+  rectangle.myRectanglePosition = [
+    createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
+];
+console.log("createCoord",rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
+console.log("myRectPos", rectangle.myRectanglePosition);
+*/
 }
-
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;
@@ -109,19 +112,18 @@ export function addDragHand(
   webpageSprite
 ) {
   const png = PIXI.Texture.from(
-    `https://s3.amazonaws.com/appforest_uf/d110/f1674585363384x114691738198125620/drag-handle-corner.png?ignore_imgix=true`
+    `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
   );
   const handle = PIXI.Sprite.from(png);
-  //handle.interactive = true;
-  var handlePosAdjustX = 40;
-  var handlePosAdjustY = 40;
+  handle.interactive = true;
+  var handlePosAdjustX = -30;
+  var handlePosAdjustY = 0;
   var scaleHandle = 0.75;
   handle.position.set(
     rectangle.myRectanglePosition[0] +
-      rectangle.myRectanglePosition[2] -
+      rectangle.myRectanglePosition[2] +
       handlePosAdjustX,
     rectangle.myRectanglePosition[1] +
-      rectangle.myRectanglePosition[3] -
       handlePosAdjustY
   );
   //console.log("rectBounds",(rectangle.myRectanglePosition[0] + rectangle.myRectanglePosition[2] - handlePosAdjustX), (rectangle.myRectanglePosition[1] + rectangle.myRectanglePosition[3] - handlePosAdjustY));
@@ -134,33 +136,23 @@ export function addDragHand(
   //handleEvents(handle, rectangle);
   handle
     .on("pointerdown", function (e) {
-      logResize ? console.log("handle-pointerdown", e.globalX, e.globalY) : null;
-        isResizing = true;
-        console.log("reSizing", isResizing);
-      //e.stopPropagation();
+      rectangle.selected = true;
+      isDrawing = false;
+      onDragStart(e,rectangle,rectangles);
     })
-      .on('pointermove', function(e){
-        //logResize ? console.log('handle-pointer-move',e.clientX, e.clientY) : null;
-        //rectangle.resizing = true;
-    //HANDLE RESIZING DISABLED PLACEHOLDER
-    handleResizerRect(e, rectangle, mainContainer, rectangles, webpageSprite);
-    //e.stopPropagation();
+    .on('pointermove', function(e){
+      onDragMove(e,rectangle,rectangles);
   }) 
     .on("pointerup", function (e) {
-      logResize ? console.log("handle-pointerup", e.globalX, e.globalY) : null;
-        isResizing = false;
-        console.log("reSizing", isResizing);
-      e.stopPropagation();
-      //handle.off('pointermove', onDragMove);
+      isDrawing = false;
+      rectangle.selected = false;
+      onDragEnd(e,rectangle,rectangles);
     })
     .on('pointerupoutside', function(e){
-        logResize ? console.log('handle-pointerupoutside',e.global.data.x, e.global.data.y) : null;
-        isResizing = false;
-        //e.stopPropagation();
+      isDrawing = false;
+      rectangle.selected = false;
+      onDragEnd(e,rectangle,rectangles);
       }) 
-        
-        
-
 }
 
 export function handleResizerRect (e, rectangle, mainContainer, rectangles, webpageSprite) {
@@ -233,61 +225,3 @@ export function removeRectangle(rectangle, array) {
   array = array.filter((rect) => rect.name != rectangle.name);
   return array;
 }
-
-/*
-function handleEvents (handle, rectangle) {
-  handle.interactive = true;
-  handle.on('pointerdown', (e) => {
-    console.log(`handleEventsStartH`);
-    onDragStartH(e, rectangle, handle);
-    e.stopPropagation();
-  })
-      //.on('mousemove', onDragMove)
-}
-// mousedown event listener
-function onDragStartH(event, rectangle, handle) {
-  //handle.off('mousedown')
-  rectangle.interactive = true;
-  initialMousePosX = rectangle.myRectanglePosition[0];
-  initialMousePosY = rectangle.myRectanglePosition[1];
-  initialRectWidth = rectangle.width;
-  initialRectHeight = rectangle.height;
-  isResizing = true;
-  console.log("dragStartH",isDrawing)
-  handle.on('pointermove', (e) => {
-    console.log(`dradStartH`);
-    onDragMoveH(e, rectangle, handle);
-    e.stopPropagation();
-  })
-      .on('pointerup', onDragEndH)
-      .on('pointerupoutside', onDragEndH);
-      
-}
-
-// mousemove event listener
-function onDragMoveH(event, rectangle, handle) {
-  if (isResizing) {
-    //console.log(event.data.global.x);
-  currentMousePosX = event.data.global.x;
-  currentMousePosY = event.data.global.y;
-  var deltaX = currentMousePosX - initialMousePosX;
-  var deltaY = currentMousePosY - initialMousePosY;
-  rectangle.width = initialRectWidth + deltaX;
-  rectangle.height = initialRectHeight + deltaY;
-  console.log(deltaX, deltaY, rectangle.width, rectangle.height);
-  //handle.x = rectangle.width - handle.width/2;
-  //handle.y = rectangle.height - handle.height/2;
-  console.log("dragMove",isDrawing)
-  }
-}
- 
-// mouseup event listener
-function onDragEndH(e) {
-  this.off('pointermove', onDragMoveH);
-  this.off('pointerup', onDragEndH);
-  this.off('pointerupoutside', onDragEndH);
-  isResizing = false;
-  //this.interactive = false;
-  console.log("dragEnd",isDrawing)
-}
-*/

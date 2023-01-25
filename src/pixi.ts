@@ -4,7 +4,11 @@
 let startX, startY, endX, endY;
 let isDrawing = false;
 let logging = true;
+let logRectEvents = true;
 let loadData = true;
+var initialMousePosX,initialMousePosY,currentMousePosY,currentMousePosX;
+var initialRectWidth;
+var initialRectHeight;
 const rectangles = [];
 //end C Declare
 
@@ -22,11 +26,13 @@ import {
   handleResizer,
   removeRectangle,
   addDragHand,
+  addResizeHand,
   getStartCoordinates,
   changeRectColor,
   logDrag,
   logResize,
-  isResizing
+  isResizing,
+  addResizeHand
 } from "./events";
 //--begin html container setup, and pixi core element setup
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
@@ -40,8 +46,8 @@ const renderer = PIXI.autoDetectRenderer({
   //height: properties.bubble.height(),
   backgroundColor: 0x2980b9,
 });
-var app = new PIXI.Application({ resizeTo: window });
-var mainContainer = new PIXI.Container();
+const app = new PIXI.Application({ resizeTo: window });
+const mainContainer = new PIXI.Container();
 
 mainContainer.interactive = false;
 
@@ -259,7 +265,7 @@ rectangle.beginFill(0xFFFF00, .5);
 rectangle.labelColor = "0x"+ c;
 rectangle.drawRect(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
 rectangle.endFill();
-rectangle.interactive = true;
+//rectangle.interactive = true;
 rectangle.dragging = false;
 rectangle.name = id;
 rectangle.buttonMode = true;
@@ -268,31 +274,37 @@ rectangle.myRectanglePosition = [
     createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
 ];
 //set hitArea for dragging
-const hitArea = new PIXI.Rectangle(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
-rectangle.hitArea = hitArea;
+//const hitArea = new PIXI.Rectangle(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
+//rectangle.hitArea = hitArea;
 
 //add a hand
 rectangle.cursor = 'hand';
 
-logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea) : null;
+//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea) : null;
 
-rectangle
+/*rectangle
     //.on('mouseover', mouseOver)
     //.on('mouseout', mouseOut)
     .on('pointerdown', function(e){
-        logging ? console.log('rect-pointerdown',e.clientX, e.clientY) : null;
-        this.selected = true;
-        isDrawing = false;
-        onDragStart(e,this,rectangles);}) 
+        logRectEvents ? console.log('rect-pointerdown',e.clientX, e.clientY, e, this, (this.myRectanglePosition[0]+this.myRectanglePosition[2]), e.globalX, 
+      ((this.myRectanglePosition[1]+this.myRectanglePosition[3])), e.globalY) : null;
+        if (
+          ((this.myRectanglePosition[0]+this.myRectanglePosition[2] - 48) < e.globalX)
+           && 
+          (((this.myRectanglePosition[1]+this.myRectanglePosition[3]) - 48) < e.globalY)
+        ){
+          //isResizing = true;
+          console.log("reSizing");
+        } else
+        {
+
+} })
     .on('pointerup', function(e){
-        isDrawing = false;
-        this.selected = false;
-        onDragEnd(e,this,rectangles);}) 
+       }) 
     .on('pointerupoutside', function(e){
-        isDrawing = false;
-        this.selected = false;
-        onDragEnd(e,this,rectangles);}) 
-    .on('pointermove', function(e){onDragMove(e,this,rectangles);}) 
+      }) 
+    .on('pointermove', function(e){}) 
+    */
 // Add the rectangle to the stage and the list of rectangles
 rectangles.push(rectangle);
 
@@ -314,6 +326,7 @@ label.position.set(
 logging ? console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds()) : null;
 rectangle.addChild(label);
 */
+//addResizeHand(rectangle, mainContainer, rectangles, webpageSprite);
 addDragHand(rectangle, mainContainer, rectangles, webpageSprite);
 }
 
@@ -372,7 +385,7 @@ mainContainer.on("mousedown", (event) => {
   logging ? console.log("rectangles", rectangles) : null;
   for (let rectangle of rectangles) {
     logging ? console.log("rectangle selected?", rectangle.selected) : null;
-    if (rectangle.selected) {
+    if (rectangle.selected || rectangle.resizing) {
       // The mouse is over the rectangle, don't start drawing
       //console.log('over rectangle, do not draw',"recthit",rectangle.hitArea,event.offsetX, event.offsetY);
       //rectangle.selected = true;
@@ -399,7 +412,7 @@ mainContainer.on("mouseup", () => {
 
 mainContainer.on("pointermove", (event) => {
   if (!isDrawing) return;
-  if (isResizing) return;
+  
   // Clear the stage
   mainContainer.removeChildren();
   // Add the image back to the stage
@@ -414,7 +427,6 @@ mainContainer.on("pointermove", (event) => {
   logging ? console.log("coord", coordinates) : null;
 
   // Create a new rectangle graphic using the calculated dimensions
-
   const rectangle = new PIXI.Graphics();
   rectangle.beginFill(0x0000ff, 0.5); // Transparent blue
   rectangle.drawRect(
@@ -431,3 +443,121 @@ mainContainer.on("pointermove", (event) => {
   // Add all previously added rectangles back to the stage
   rectangles.forEach((r) => mainContainer.addChild(r));
 });
+function addResizeHand(
+  rectangle,
+  mainContainer,
+  rectangles,
+  webpageSprite
+) {
+  const png = PIXI.Texture.from(
+    `https://s3.amazonaws.com/appforest_uf/d110/f1674585363384x114691738198125620/drag-handle-corner.png?ignore_imgix=true`
+  );
+  const handle = PIXI.Sprite.from(png);
+  handle.interactive = true;
+  var handlePosAdjustX = 40;
+  var handlePosAdjustY = 40;
+  var scaleHandle = 0.75;
+  handle.position.set(
+    rectangle.myRectanglePosition[0] +
+      rectangle.myRectanglePosition[2] -
+      handlePosAdjustX,
+    rectangle.myRectanglePosition[1] +
+      rectangle.myRectanglePosition[3] -
+      handlePosAdjustY
+  );
+  //console.log("rectBounds",(rectangle.myRectanglePosition[0] + rectangle.myRectanglePosition[2] - handlePosAdjustX), (rectangle.myRectanglePosition[1] + rectangle.myRectanglePosition[3] - handlePosAdjustY));
+  const hitArea = new PIXI.Rectangle(0, 0, 64 * scaleHandle, 64 * scaleHandle);
+  handle.hitArea = hitArea;
+  handle.buttonMode = true;
+  logResize ? console.log("handle-hitarea", hitArea) : null;
+  handle.scale.set(scaleHandle, scaleHandle);
+  rectangle.addChild(handle);
+  //handleEvents(handle, rectangle);
+  handle
+    .on("pointerdown", function (e) {
+      rectangle.resizing = true;
+      isDrawing = false;
+      onDragStartH(e,rectangle);
+    })
+    .on('pointermove', function(e){
+      onDragMoveH(e,rectangle);
+  }) 
+    .on("pointerup", function (e) {
+      isDrawing = false;
+      rectangle.resizing = false;
+      onDragEndH(e,rectangle);
+    })
+    .on('pointerupoutside', function(e){
+      isDrawing = false;
+      rectangle.resizing = false;
+      onDragEndH(e,rectangle);
+      }) 
+}
+  
+/*
+function handleEvents (handle, rectangle) {
+  handle.interactive = true;
+  handle.on('pointerdown', (e) => {
+    console.log(`handleEventsStartH`);
+    onDragStartH(e, rectangle, handle);
+    e.stopPropagation();
+  })
+      //.on('mousemove', onDragMove)
+}
+*/
+// mousedown event listener
+function onDragStartH(event, rectangle, handle) {
+  //handle.off('mousedown')
+  rectangle.interactive = true;
+  initialMousePosX = rectangle.myRectanglePosition[0];
+  initialMousePosY = rectangle.myRectanglePosition[1];
+  initialRectWidth = rectangle.width;
+  initialRectHeight = rectangle.height;
+  //isResizing = true;
+  console.log("dragStartH",isDrawing)
+      
+}
+
+// mousemove event listener
+function onDragMoveH(event, rect) {// Clear the stage
+  mainContainer.removeChildren();
+
+  // Add the image back to the stage
+  mainContainer.addChild(webpageSprite);
+
+  // Calculate the current position of the pointer
+  var endX = event.global.x - mainContainer.position.x;
+  var endY = event.global.y - mainContainer.position.y;
+
+  // Calculate the dimensions of the rectangle
+  let coordinates = getStartCoordinates(rect.myRectanglePosition[0], rect.myRectanglePosition[1], endX, endY);
+  logResize ? console.log("coord", coordinates) : null;
+
+  // Create a new rectangle graphic using the calculated dimensions
+  
+ 
+  const rectangle = new PIXI.Graphics();
+  rectangle.name = rect.name;
+  rectangle.beginFill(0x0000ff, 0.5); // Transparent blue
+  rectangle.drawRect(
+    coordinates.startRectX,
+    coordinates.startRectY,
+    coordinates.width,
+    coordinates.height
+  );
+  rectangle.endFill();
+  removeRectangle(rect, rectangles);
+
+  // Add the rectangle to the stage
+  rectangles.push(rectangle);
+
+  // Add all previously added rectangles back to the stage
+  rectangles.forEach((r) => mainContainer.addChild(r));
+}
+ 
+// mouseup event listener
+function onDragEndH(e, rectangle) {
+  rect.resizing = false; 
+  //this.interactive = false;
+  console.log("dragEnd",isDrawing)
+}

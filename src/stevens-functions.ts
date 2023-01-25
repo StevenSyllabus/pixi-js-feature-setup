@@ -117,4 +117,26 @@ function createScrollBar(
   return scrollbar;
 }
 
-export { createScrollBar };
+function handleResize(
+  event: Event,
+  pixiApp: PIXI.Application,
+  mainContainer: PIXI.Container,
+  webpageSprite: PIXI.Sprite,
+  intialWebpageWidth: number
+) {
+  console.log(`resize`);
+
+  webpageSprite.scale.set(pixiApp.view.width / intialWebpageWidth);
+  mainContainer.children.forEach((child) => {
+    child.scale.set(pixiApp.view.width / intialWebpageWidth);
+    console.log(`child.intialWidth: ${child.intialWidth}`);
+  });
+  //optional timeout to prevent the resize from firing too many times
+  //   clearTimeout(resizeTimeout);
+
+  //   resizeTimeout = setTimeout(() => {
+  //     console.log(`resize timeout`);
+  //     console.log(pixiApp.view.width / webpageSprite.intialWidth);
+  //   }, 100);
+}
+export { createScrollBar, handleResize };

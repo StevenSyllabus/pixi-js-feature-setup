@@ -10,7 +10,7 @@ const rectangles = [];
 
 import * as PIXI from "pixi.js";
 import "@pixi/events";
-import { createScrollBar } from "./stevens-functions";
+import { createScrollBar, handleResize } from "./stevens-functions";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 import { DAS, att, colors, rects, rects2 } from "./test-data";
@@ -60,7 +60,8 @@ let intialWebpageWidth,
   intialCanvasWidth,
   intialCanvasHeight,
   intialScale,
-  webpageSprite;
+  webpageSprite,
+  scrollBar;
 
 let resizeTimeout = null;
 
@@ -85,27 +86,12 @@ const screenshot = PIXI.Texture.fromURL(
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
-  createScrollBar(mainContainer, app, ele);
+  scrollBar = createScrollBar(mainContainer, app, ele);
 });
 
-app.renderer.on(`resize`, handleResize);
-
-function handleResize(e) {
-  const intialSize = app.view.width;
-  console.log(`resize`);
-  webpageSprite.scale.set(app.view.width / intialWebpageWidth);
-  mainContainer.children.forEach((child) => {
-    child.scale.set(app.view.width / intialWebpageWidth);
-    console.log(`child.intialWidth: ${child.intialWidth}`);
-  });
-  //optional timeout to prevent the resize from firing too many times
-  clearTimeout(resizeTimeout);
-
-  resizeTimeout = setTimeout(() => {
-    console.log(`resize timeout`);
-    console.log(app.view.width / webpageSprite.intialWidth);
-  }, 100);
-}
+app.renderer.on(`resize`, function (event) {
+  handleResize(event, app, mainContainer, webpageSprite, intialWebpageWidth);
+});
 
 //*end of scrollbar setup */
 

@@ -35,7 +35,7 @@ export function onDragEnd(e, rectangle, rectangles) {
 }
 
 export function onDragMove(e, rectangle, rectangles) {
-    const mousePosition = e.data.global;
+    //const mousePosition = e.data.global;
     if (rectangle.selected != true) return;
 
     //logDrag ? console.log('DraggingMove',rectangle.selected,rectangle) : null;
@@ -102,7 +102,7 @@ export function addDragHand (rectangle, mainContainer, rectangles, webpageSprite
             //logResize ? console.log('handle-pointer-move',e.clientX, e.clientY) : null;
             //rectangle.resizing = true;
         //HANDLE RESIZING DISABLED PLACEHOLDER
-            //rectangle.resizing ? handleResizerRect(e, rectangle, mainContainer, rectangles, webpageSprite) : null;
+            rectangle.resizing ? handleResizerRect(e, rectangle, mainContainer, rectangles, webpageSprite) : null;
         e.stopPropagation();}) 
 
 }
@@ -114,6 +114,7 @@ export function handleResizerRect (e, rectangle, mainContainer, rectangles, webp
      const rect = new PIXI.Graphics();
      rect.name = rectangle.name;
      removeRectangle(rectangle, rectangles);
+     rectangle.clear();
 
      // Add the image back to the stage
      mainContainer.addChild(webpageSprite);

@@ -14,6 +14,11 @@ const rectangles = [];
 
 import * as PIXI from "pixi.js";
 import "@pixi/events";
+import {
+  createScrollBar,
+  updateScrollBarPosition,
+  handleResize,
+} from "./stevens-functions";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 import { DAS, att, colors, rects, rects2 } from "./test-data";
@@ -34,6 +39,7 @@ import {
   isResizing,
   addResizeHand
 } from "./events";
+import { Graphics } from "pixi.js";
 //--begin html container setup, and pixi core element setup
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 //--end html container setup, and pixi core element setup
@@ -66,7 +72,8 @@ let intialWebpageWidth,
   intialCanvasWidth,
   intialCanvasHeight,
   intialScale,
-  webpageSprite;
+  webpageSprite,
+  scrollBar = <PIXI.Graphics>{};
 
 let resizeTimeout = null;
 
@@ -91,134 +98,14 @@ const screenshot = PIXI.Texture.fromURL(
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
-  createScrollBar(mainContainer);
+  scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
 });
 
-app.renderer.on(`resize`, handleResize);
+app.renderer.on(`resize`, function (event) {
+  handleResize(event, app, mainContainer, webpageSprite, intialWebpageWidth);
+  updateScrollBarPosition(mainContainer, app, scrollBar);
+});
 
-function handleResize(e) {
-  const intialSize = app.view.width;
-  console.log(`resize`);
-  webpageSprite.scale.set(app.view.width / intialWebpageWidth);
-  mainContainer.children.forEach((child) => {
-    child.scale.set(app.view.width / intialWebpageWidth);
-    console.log(`child.intialWidth: ${child.intialWidth}`);
-  });
-  //optional timeout to prevent the resize from firing too many times
-  clearTimeout(resizeTimeout);
-
-  resizeTimeout = setTimeout(() => {
-    console.log(`resize timeout`);
-    console.log(app.view.width / webpageSprite.intialWidth);
-  }, 100);
-}
-
-function createScrollBar(mainContainer) {
-  const maxScroll = mainContainer.height - app.view.height;
-  const scrollbar = new PIXI.Graphics();
-  let scrolling = false;
-  let scrollingTimeout = null;
-  scrollbar.interactive = true;
-
-  scrollbar.beginFill(0x808080);
-  scrollbar.drawRect(
-    app.view.width - 8,
-    0,
-    14,
-    app.view.height * (app.view.height / mainContainer.height)
-  );
-
-  scrollbar.endFill();
-
-  scrollbar.addEventListener("pointerdown", (e) => {
-    const scrollPercent = -mainContainer.position.y / maxScroll;
-    const scrollbarHeight =
-      app.view.height * (app.view.height / mainContainer.height);
-    const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-    ele.pressed = true;
-    scrollbar.lastY = e.data.global.y;
-    scrollbar.lastMouseY = e.client.y;
-    console.log(e.client.y);
-
-    scrollbar.lastTop = scrollbarY;
-  });
-
-  scrollbar.addEventListener("pointerup", (e) => {
-    console.log(`scrollbar pointerup`);
-    ele.pressed = false;
-    console.log(ele.pressed);
-  });
-
-  scrollbar.addEventListener("pointerupoutside", (e) => {
-    console.log(`scrollbar pointerupoutside`);
-    ele.pressed = false;
-    console.log(ele.pressed);
-  });
-  window.addEventListener(
-    "pointermove",
-    (e) => {
-      if (ele.pressed) {
-        const scrollPercent = -mainContainer.position.y / maxScroll;
-        console.log(`scrollPercent: ${scrollPercent}`);
-
-        const scrollbarHeight =
-          app.view.height * (app.view.height / mainContainer.height);
-        const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-        //this mousedif is way wrong. It should be the difference between the mouse's y position and the scrollbar's y position
-
-        const mouseDif = e.y - scrollbar.lastMouseY;
-        console.log(mouseDif);
-
-        const newTop = mouseDif + scrollbar.lastTop;
-        const scrollPercent2 = newTop / (app.view.height - scrollbarHeight);
-        const newScroll = Math.max(-scrollPercent2 * maxScroll);
-
-        if (scrollPercent2 > 0 && scrollPercent2 < 1) {
-          mainContainer.position.y = newScroll;
-          scrollbar.clear();
-          scrollbar.beginFill(0x808080);
-          scrollbar.drawRect(app.view.width - 8, newTop, 14, scrollbarHeight);
-          scrollbar.endFill();
-        }
-      }
-    },
-    { passive: true }
-  );
-
-  app.stage.addChild(scrollbar);
-
-  //update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
-  canvasElement.addEventListener("wheel", scrollCanvas, { passive: false });
-  //*end of scrollbar setup */
-
-  //resize the container and scrollbar when the window is resized
-
-  function scrollCanvas(event) {
-    event.preventDefault();
-    document.body.style.overflow = "hidden";
-    // Update the container's y position based on the mouse wheel delta
-    mainContainer.position.y -= event.deltaY;
-
-    // Clamp the container's position so that it can't scroll past the max scroll value
-    mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
-    mainContainer.position.y = Math.min(mainContainer.position.y, 0);
-
-    // Update the scrollbar position and size based on the container's scroll position
-    const scrollPercent = -mainContainer.position.y / maxScroll;
-    const scrollbarHeight =
-      app.view.height * (app.view.height / mainContainer.height);
-    const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-    scrollbar.clear();
-    scrollbar.beginFill(0x808080);
-    scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
-    scrollbar.endFill();
-    clearTimeout(scrollingTimeout);
-    scrollingTimeout = setTimeout(() => {
-      console.log("Show the content again because the user stopped scrolling");
-      document.body.style.overflow = "auto";
-    }, 100);
-  }
-}
 //*end of scrollbar setup */
 
 ///START CHRIS CODE

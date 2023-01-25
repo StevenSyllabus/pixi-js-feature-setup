@@ -1,39 +1,58 @@
-//@ts-nocheck
+//@ts-nocheck this turns off typesccript checks for the entire file
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
+//start C Declare before import
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = false;
+let selected, over;
+const rectangles = [];
+//end C Declare
+
 import * as PIXI from "pixi.js";
 import "@pixi/events";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 import { DAS, att, colors, rects, rects2 } from "./test-data";
+import {
+  onDragStart,
+  onDragEnd,
+  onDragMove,
+  mouseOut,
+  mouseOver,
+  handleResizer,
+  removeRectangle,
+  addDragHand,
+  getStartCoordinates,
+  changeRectColor,
+  logDrag,
+  logResize,
+} from "./events";
 //--begin html container setup, and pixi core element setup
-const canvasElement = <HTMLDivElement>document.getElementById(`app`);
-const mainDivContainer = <HTMLDivElement>(
-  document.getElementById(`mainContainer`)
-);
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 //--end html container setup, and pixi core element setup
 PIXI.settings.ROUND_PIXELS = true;
-
+const ele = document.getElementById(`test`);
 //intialize pixi
-const renderer = PIXI.autoDetectRenderer({});
-let app = new PIXI.Application({
-  autoStart: true,
-  autoDensity: false,
-  resolution: 1,
-  backgroundColor: 0xffffff,
-  backgroundAlpha: 1,
-  resizeTo: canvasElement,
-  antialias: false,
-  hello: true,
+
+const renderer = PIXI.autoDetectRenderer({
+  //width: properties.bubble.width(),
+  //height: properties.bubble.height(),
+  backgroundColor: 0x2980b9,
 });
-//csp change
-//canvasElement.appendChild(renderer.view);
-canvasElement.appendChild(app.view);
+var app = new PIXI.Application({ resizeTo: window });
+var mainContainer = new PIXI.Container();
+
+mainContainer.interactive = false;
+
+var canvasElement = mainContainer;
+app.stage.addChild(mainContainer);
+//var element = document.getElementById('pixi');
+ele.appendChild(app.view);
 
 //create a container for the webpage and add it to the stage
-const mainContainer = new PIXI.Container();
-app.stage.addChild(mainContainer);
-
+//const mainContainer = new PIXI.Container();
+//app.stage.addChild(mainContainer);
+//console.log(canvasElement,mainContainer);
 //create a sprite for the webpage and add it to the container
 let intialWebpageWidth,
   intialWebpageHeight,
@@ -42,10 +61,6 @@ let intialWebpageWidth,
   intialScale,
   webpageSprite;
 
-let startX, startY, endX, endY;
-let isDrawing = false;
-let logging = true;
-const rectangles = [];
 let resizeTimeout = null;
 
 const screenshot = PIXI.Texture.fromURL(
@@ -97,7 +112,7 @@ function createScrollBar(mainContainer) {
   let scrolling = false;
   let scrollingTimeout = null;
   scrollbar.interactive = true;
-  scrollbar.height = app.view.height;
+
   scrollbar.beginFill(0x808080);
   scrollbar.drawRect(
     app.view.width - 8,
@@ -113,7 +128,7 @@ function createScrollBar(mainContainer) {
     const scrollbarHeight =
       app.view.height * (app.view.height / mainContainer.height);
     const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-    mainDivContainer.pressed = true;
+    ele.pressed = true;
     scrollbar.lastY = e.data.global.y;
     scrollbar.lastMouseY = e.client.y;
     console.log(e.client.y);
@@ -123,19 +138,19 @@ function createScrollBar(mainContainer) {
 
   scrollbar.addEventListener("pointerup", (e) => {
     console.log(`scrollbar pointerup`);
-    mainDivContainer.pressed = false;
-    console.log(mainDivContainer.pressed);
+    ele.pressed = false;
+    console.log(ele.pressed);
   });
 
   scrollbar.addEventListener("pointerupoutside", (e) => {
     console.log(`scrollbar pointerupoutside`);
-    mainDivContainer.pressed = false;
-    console.log(mainDivContainer.pressed);
+    ele.pressed = false;
+    console.log(ele.pressed);
   });
   window.addEventListener(
     "pointermove",
     (e) => {
-      if (mainDivContainer.pressed) {
+      if (ele.pressed) {
         const scrollPercent = -mainContainer.position.y / maxScroll;
         console.log(`scrollPercent: ${scrollPercent}`);
 
@@ -197,6 +212,7 @@ function createScrollBar(mainContainer) {
     }, 100);
   }
 }
+//*end of scrollbar setup */
 
 ///START CHRIS CODE
 //test data loaded from test-data.ts
@@ -302,79 +318,88 @@ function addLabel(rect, label1) {
 mainContainer.on("pointerup", (event) => {
   if (!isDrawing) return;
 
-  // Save the ending position of the pointer
-  endX = event.global.x - mainContainer.x;
-  endY = event.global.y - mainContainer.y;
-  isDrawing = false;
-  console.log(`testest`);
+  // Clear the stage
+  mainContainer.removeChildren();
 
-  // Calculate the dimensions of the rectangle
-  const width = endX - startX;
-  const height = endY - startY;
+  // Add the image back to the stage
+  mainContainer.addChild(webpageSprite);
+
+  // Add all previously added rectangles back to the stage
+  rectangles.forEach((r) => mainContainer.addChild(r));
+
+  // Save the ending position of the pointer
+  endX = event.global.x - mainContainer.position.x;
+  endY = event.global.y - mainContainer.position.y;
+  isDrawing = false;
+
+  let createCoord = getStartCoordinates(startX, startY, endX, endY);
+  logging ? console.log("createCoord", createCoord) : null;
 
   //stop small box creation - Placeholder
-  if (width < 20) return;
-  if (height < 20) return;
+  if (createCoord.width < 20) return;
+  if (createCoord.height < 20) return;
 
   // Create a new rectangle graphic using the calculated dimensions
   const rectangle = new PIXI.Graphics();
   rectangle.beginFill(0xffff00, 0.5);
-  rectangle.drawRect(startX, startY, width, height);
+  rectangle.labelColor = "0xFFFF00";
+  rectangle.drawRect(
+    createCoord.startRectX,
+    createCoord.startRectY,
+    createCoord.width,
+    createCoord.height
+  );
   rectangle.endFill();
   rectangle.interactive = true;
-  rectangle.interactive = false;
-  rectangle.intialWidth = width;
-
+  rectangle.dragging = false;
   rectangle.name = Math.random().toString(16).substr(2, 8);
-
+  rectangle.buttonMode = true;
+  rectangle.resizingRadius = false;
+  rectangle.myRectanglePosition = [
+    createCoord.startRectX,
+    createCoord.startRectY,
+    createCoord.width,
+    createCoord.height,
+  ];
   //set hitArea for dragging
-  const hitArea = new PIXI.Rectangle(startX, startY, width, height);
+  const hitArea = new PIXI.Rectangle(
+    createCoord.startRectX,
+    createCoord.startRectY,
+    createCoord.width,
+    createCoord.height
+  );
   rectangle.hitArea = hitArea;
 
   //add a hand
   rectangle.cursor = "hand";
 
-  if (logging) {
-    console.log("rectangle creation", rectangle);
-  }
+  logging
+    ? console.log("rectangle creation", rectangle, "hitArea", hitArea)
+    : null;
 
-  ///drag events
-  rectangle.on("mousedown", () => {
-    rectangle.interactive = true; // Make the rectangle interactive
-    if (logging) {
-      console.log("mousedown-dragtrue");
-    }
-  });
-  rectangle.on("mousemove", (event) => {
-    if (!rectangle.interactive) return;
-    if (isDrawing) return;
-    // Update the position of the rectangle
-    rectangle.position.x += event.data.originalEvent.movementX;
-    rectangle.position.y += event.data.originalEvent.movementY;
-    /*reset hitArea for dragging - NEEDS WORK
-        console.log('oldhitArea', rectangle.position.x, rectangle.position.y,rectangle.hitArea);
-        let hitArea = new PIXI.Rectangle(rectangle.position.x, rectangle.position.y, rectangle.hitArea.width, rectangle.hitArea.height);
-        rectangle.hitArea = hitArea;
-        console.log('newhitArea', rectangle.hitArea);
-        */
-    if (logging) {
-      console.log("mousemove");
-    }
-  });
-  rectangle.on("mouseup", () => {
-    rectangle.interactive = false; // Stop the dragging
-    if (logging) {
-      console.log("mouseup-dragfalse");
-    }
-    rectangles.forEach((r) => (r.interactive = false));
-  });
-
+  rectangle
+    //.on('mouseover', mouseOver)
+    //.on('mouseout', mouseOut)
+    .on("pointerdown", function (e) {
+      logging ? console.log("rect-pointerdown", e.clientX, e.clientY) : null;
+      this.selected = true;
+      onDragStart(e, this, rectangles);
+    })
+    .on("pointerup", function (e) {
+      this.selected = false;
+      onDragEnd(e, this, rectangles);
+    })
+    .on("pointerupoutside", function (e) {
+      this.selected = false;
+      onDragEnd(e, this, rectangles);
+    })
+    .on("pointermove", function (e) {
+      onDragMove(e, this, rectangles);
+    });
   // Add the rectangle to the stage and the list of rectangles
   rectangles.push(rectangle);
 
-  //console.log("pointerup", rectangle.x, rectangle.y, rectangle);
   mainContainer.addChild(rectangle);
-  //console.log("afteradd", rectangle.x, rectangle.y, rectangle);
 
   const x = rectangle.position.x;
   const y = rectangle.position.y;
@@ -384,70 +409,79 @@ mainContainer.on("pointerup", (event) => {
     fontSize: 24,
     fill: 0x000000,
   });
-  label.position.set(startX + 20, startY + 20);
-  if (logging) {
-    console.log(
-      "label",
-      rectangle.x,
-      rectangle.y,
-      rectangle,
-      rectangle.getBounds()
-    );
-  }
+  label.position.set(
+    rectangle.getBounds().x + 20 - mainContainer.position.x,
+    rectangle.getBounds().y + 20 - mainContainer.position.y
+  );
+  logging
+    ? console.log(
+        "label",
+        rectangle.x,
+        rectangle.y,
+        rectangle,
+        rectangle.getBounds()
+      )
+    : null;
   rectangle.addChild(label);
+  addDragHand(rectangle, mainContainer, rectangles, webpageSprite);
 });
 
-mainContainer.addEventListener("pointerdown", (event) => {
+mainContainer.on("mousedown", (event) => {
   // Check if the mouse is over any of the rectangles
-  if (logging) {
-    console.log("listener mousedown");
-  }
-  for (const rectangle of rectangles) {
-    //console.log('rectangle,event', rectangle, event);
-    if (rectangle.hitArea.contains(event.offsetX, event.offsetY)) {
+  logging ? console.log("listener mousedown") : null;
+  logging ? console.log("rectangles", rectangles) : null;
+  for (let rectangle of rectangles) {
+    logging ? console.log("rectangle selected?", rectangle.selected) : null;
+    if (rectangle.selected) {
       // The mouse is over the rectangle, don't start drawing
-      //console.log('over rectangle, do not draw');
+      //console.log('over rectangle, do not draw',"recthit",rectangle.hitArea,event.offsetX, event.offsetY);
+      //rectangle.selected = true;
+      //rectangle.interactive = true;
+      changeRectColor(rectangle, "0x0000FF");
+      logging ? console.log("returning", rectangle) : null;
       return;
     }
+    logging
+      ? console.log("recthit", rectangle.hitArea, event.offsetX, event.offsetY)
+      : null;
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
-
   startX = event.global.x - mainContainer.position.x;
   startY = event.global.y - mainContainer.position.y;
 });
 
 mainContainer.on("mouseup", () => {
   isDrawing = false;
-  if (logging) {
-    console.log("Lmouseup");
-  }
+  rectangles.forEach((r) => (r.selected = false));
+  logging ? console.log("Lmouseup") : null;
 });
 
-mainContainer.addEventListener("pointermove", (event) => {
-  if (logging) {
-    console.log("Lpointermove", isDrawing);
-  }
+mainContainer.on("pointermove", (event) => {
   if (!isDrawing) return;
-
   // Clear the stage
   mainContainer.removeChildren();
-
   // Add the image back to the stage
   mainContainer.addChild(webpageSprite);
 
   // Calculate the current position of the pointer
   endX = event.global.x - mainContainer.position.x;
   endY = event.global.y - mainContainer.position.y;
+
   // Calculate the dimensions of the rectangle
-  const width = endX - startX;
-  const height = endY - startY;
+  let coordinates = getStartCoordinates(startX, startY, endX, endY);
+  logging ? console.log("coord", coordinates) : null;
 
   // Create a new rectangle graphic using the calculated dimensions
 
   const rectangle = new PIXI.Graphics();
   rectangle.beginFill(0x0000ff, 0.5); // Transparent blue
-  rectangle.drawRect(startX, startY, width, height);
+  rectangle.drawRect(
+    coordinates.startRectX,
+    coordinates.startRectY,
+    coordinates.width,
+    coordinates.height
+  );
   rectangle.endFill();
 
   // Add the rectangle to the stage

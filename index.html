@@ -4,63 +4,33 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      #app {
-        height: 500px;
-      }
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width, minimal-ui">
+    <style>     
+      body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+            canvas {
+                float: left;
+            }
+            #mainContainer, #app {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+        
     </style>
-
     <title>Vite + TS</title>
   </head>
   <body>
-    <div style="border: 2px solid black; max-width: 950px" id="mainContainer">
-      <div
-        style="
-          border: 1px solid grey;
-          box-shadow: inset 0 0 10px #ccc;
-          display: flex;
-          flex-direction: column;
-        "
-      >
-        <p
-          style="
-            border: 1px solid grey;
-            padding: 4px;
-            height: fit-content;
-            margin: 0px;
-          "
-        >
-          Panel title
-        </p>
-        <div
-          style="
-            display: flex;
-            gap: 4px;
-            width: fit-content;
-            align-self: flex-end;
-            padding-right: 5px;
-          "
-        >
-          <p style="padding: 2px; border: 1px solid grey; border-radius: 4px">
-            Details
-          </p>
-          <p style="padding: 2px; border: 1px solid grey; border-radius: 4px">
-            Desktop
-          </p>
-          <p style="padding: 2px; border: 1px solid grey; border-radius: 4px">
-            Mobile
-          </p>
-          <p style="padding: 2px; border: 1px solid grey; border-radius: 4px">
-            Text
-          </p>
-        </div>
-      </div>
-      <h1>Syllabus</h1>
-      <div id="app" style="max-width: 950px"></div>
-    </div>
-    <h2>States set</h2>
-    <div id="states" style="margin-top: 10px">states</div>
-    <script type="module" src="/src/pixi.ts"></script>
+ <div id="test"></div>
+  
+  </div>
   </body>
-</html>
+  <script type="module" src="/src/pixi.ts"></script>
+  </html>

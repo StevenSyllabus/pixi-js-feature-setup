@@ -6,16 +6,17 @@ function createScrollBar(
   div: HTMLDivElement
 ) {
   const maxScroll = mainContainer.height - pixiApp.view.height;
+  const scrollBarWidth = 14;
   const scrollbar = new PIXI.Graphics();
-  let scrolling = false;
-  let scrollingTimeout = null;
+
+  let scrollingTimeout: number;
   scrollbar.interactive = true;
 
   scrollbar.beginFill(0x808080);
   scrollbar.drawRect(
-    pixiApp.view.width - 8,
+    pixiApp.view.width - scrollBarWidth,
     0,
-    14,
+    scrollBarWidth,
     pixiApp.view.height * (pixiApp.view.height / mainContainer.height)
   );
 
@@ -32,18 +33,21 @@ function createScrollBar(
     console.log(e.client.y);
 
     scrollbar.lastTop = scrollbarY;
+    scrollbar.tint = 0x808080;
   });
 
   scrollbar.addEventListener("pointerup", (e) => {
     console.log(`scrollbar pointerup`);
     div.pressed = false;
     console.log(div.pressed);
+    scrollbar.tint = 0xffffff;
   });
 
   scrollbar.addEventListener("pointerupoutside", (e) => {
     console.log(`scrollbar pointerupoutside`);
     div.pressed = false;
     console.log(div.pressed);
+    scrollbar.tint = 0xffffff;
   });
   window.addEventListener(
     "pointermove",
@@ -70,7 +74,7 @@ function createScrollBar(
           scrollbar.clear();
           scrollbar.beginFill(0x808080);
           scrollbar.drawRect(
-            pixiApp.view.width - 8,
+            pixiApp.view.width - 14,
             newTop,
             14,
             scrollbarHeight
@@ -81,12 +85,11 @@ function createScrollBar(
     },
     { passive: true }
   );
+  div.addEventListener("wheel", scrollCanvas, { passive: true });
 
   pixiApp.stage.addChild(scrollbar);
 
   //update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
-  div.addEventListener("wheel", scrollCanvas, { passive: true });
-  //*end of scrollbar setup */
 
   //resize the container and scrollbar when the window is resized
 
@@ -96,17 +99,26 @@ function createScrollBar(
     mainContainer.position.y -= event.deltaY;
 
     // Clamp the container's position so that it can't scroll past the max scroll value
-    mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
-    mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+    if (mainContainer.position.y <= mainContainer.height) {
+      mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
+      mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+    }
 
     // Update the scrollbar position and size based on the container's scroll position
     const scrollPercent = -mainContainer.position.y / maxScroll;
     const scrollbarHeight =
       pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
     const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
-    scrollbar.clear();
+    if (scrollbar.clear) {
+      scrollbar.clear();
+    }
     scrollbar.beginFill(0x808080);
-    scrollbar.drawRect(pixiApp.view.width - 8, scrollbarY, 14, scrollbarHeight);
+    scrollbar.drawRect(
+      pixiApp.view.width - scrollBarWidth,
+      scrollbarY,
+      scrollBarWidth,
+      scrollbarHeight
+    );
     scrollbar.endFill();
     clearTimeout(scrollingTimeout);
     scrollingTimeout = setTimeout(() => {
@@ -115,6 +127,25 @@ function createScrollBar(
     }, 100);
   }
   return scrollbar;
+}
+function updateScrollBarPosition(
+  mainContainer: PIXI.Container,
+  pixiApp: PIXI.Application,
+  scrollbar: PIXI.Graphics
+) {
+  const maxScroll = mainContainer.height - pixiApp.view.height;
+
+  const scrollPercent = -mainContainer.position.y / maxScroll;
+  const scrollbarHeight =
+    pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
+  const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
+  scrollbar.clear();
+  scrollbar.beginFill(0x808080);
+  scrollbar.drawRect(pixiApp.view.width - 14, scrollbarY, 14, scrollbarHeight);
+  scrollbar.endFill();
+  //clamp the container's position so that it can't scroll past the max scroll value
+
+  mainContainer.position.y = Math.min(mainContainer.position.y, 0);
 }
 
 function handleResize(
@@ -139,4 +170,4 @@ function handleResize(
   //     console.log(pixiApp.view.width / webpageSprite.intialWidth);
   //   }, 100);
 }
-export { createScrollBar, handleResize };
+export { createScrollBar, updateScrollBarPosition, handleResize };

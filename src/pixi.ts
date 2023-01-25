@@ -10,7 +10,11 @@ const rectangles = [];
 
 import * as PIXI from "pixi.js";
 import "@pixi/events";
-import { createScrollBar, handleResize } from "./stevens-functions";
+import {
+  createScrollBar,
+  updateScrollBarPosition,
+  handleResize,
+} from "./stevens-functions";
 //simply import the Bubble testing functions from the other file.
 import { setState, triggerEvent } from "./bubble";
 import { DAS, att, colors, rects, rects2 } from "./test-data";
@@ -28,6 +32,7 @@ import {
   logDrag,
   logResize,
 } from "./events";
+import { Graphics } from "pixi.js";
 //--begin html container setup, and pixi core element setup
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 //--end html container setup, and pixi core element setup
@@ -61,7 +66,7 @@ let intialWebpageWidth,
   intialCanvasHeight,
   intialScale,
   webpageSprite,
-  scrollBar;
+  scrollBar = <PIXI.Graphics>{};
 
 let resizeTimeout = null;
 
@@ -86,11 +91,12 @@ const screenshot = PIXI.Texture.fromURL(
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
-  scrollBar = createScrollBar(mainContainer, app, ele);
+  scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
 });
 
 app.renderer.on(`resize`, function (event) {
   handleResize(event, app, mainContainer, webpageSprite, intialWebpageWidth);
+  updateScrollBarPosition(mainContainer, app, scrollBar);
 });
 
 //*end of scrollbar setup */

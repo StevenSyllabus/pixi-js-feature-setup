@@ -3,7 +3,7 @@
 //start C Declare before import
 let startX, startY, endX, endY;
 let isDrawing = false;
-let logging = false;
+let logging = true;
 let selected, over;
 const rectangles = [];
 //end C Declare
@@ -135,11 +135,12 @@ function loadDAS(das) {
         createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], colors[index], das['_id']);
     })
 }
+
 //creates rectangles based on data PLACEHOLDER
 function createRect(x, y, w, h, c, id) {
     // Create a new rectangle graphic using the calculated dimensions
     const graphics = new PIXI.Graphics();
-    graphics.beginFill(c);
+    graphics.beginFill("0x" + c);
     graphics.drawRect(x, y, w, h);
     graphics.endFill();
     graphics.interactive = true;
@@ -150,6 +151,7 @@ function createRect(x, y, w, h, c, id) {
     //set hitArea for dragging
     const hitArea = new PIXI.Rectangle(x, y, w, h);
     graphics.hitArea = hitArea;
+    addLabel(graphics, id, x, y);
     mainContainer.addChild(graphics);
     rectangles.push(graphics);
 
@@ -187,17 +189,17 @@ function loadImage(im) {
     mainContainer.addChild(wpSprite);
 }
 //adds a label PLACEHOLDER
-function addLabel(rect, label1) {
+function addLabel(rect, label1, x, y) {
     const label = new PIXI.Text(label1, {
         fontFamily: 'Arial',
         fontSize: 24,
         fill: 0x000000,
     });
-    label.position.set(rect.x + 20, rect.y + 20);
-    console.log("label", rect.x, rect.y, rect, rect.getBounds());
+    label.position.set(x + 20, y + 20);
+    logging ? console.log("label", x, y, rect, rect.getBounds()) : null;
     rect.addChild(label);
 }
-//loadDAS(DAS);
+loadDAS(DAS);
 
 //Listeners
 

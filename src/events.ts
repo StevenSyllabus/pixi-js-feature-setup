@@ -144,3 +144,4 @@ export function removeRectangle (rectangle, array) {
   array = array.filter(rect => rect.name != rectangle.name);
   return array;
 }
+

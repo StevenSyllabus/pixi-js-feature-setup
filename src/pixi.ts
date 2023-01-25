@@ -4,7 +4,7 @@
 let startX, startY, endX, endY;
 let isDrawing = false;
 let logging = true;
-let loadData = false;
+let loadData = true;
 const rectangles = [];
 //end C Declare
 
@@ -26,6 +26,7 @@ import {
   changeRectColor,
   logDrag,
   logResize,
+  isResizing
 } from "./events";
 //--begin html container setup, and pixi core element setup
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
@@ -299,15 +300,20 @@ mainContainer.addChild(rectangle);
 
 const x = rectangle.position.x;
 const y = rectangle.position.y;
-//    addLabel(rectangle, rectangle.name);
-const label = new PIXI.Text(rectangle.name, {
+addLabel(rectangle);
+/*
+    const label = new PIXI.Text(rectangle.name, {
     fontFamily: 'Arial',
     fontSize: 24,
     fill: 0x000000,
 });
-label.position.set(rectangle.getBounds().x + 20, rectangle.getBounds().y + 20);
+label.position.set(
+  rectangle.getBounds().x + 20 - mainContainer.position.x,
+  rectangle.getBounds().y + 20 - mainContainer.position.y
+);
 logging ? console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds()) : null;
 rectangle.addChild(label);
+*/
 addDragHand(rectangle, mainContainer, rectangles, webpageSprite);
 }
 
@@ -320,14 +326,17 @@ function loadImage(im) {
   mainContainer.addChild(wpSprite);
 }
 //adds a label PLACEHOLDER
-function addLabel(rect, label1, x, y) {
-  const label = new PIXI.Text(label1, {
+function addLabel(rect) {
+  const label = new PIXI.Text(rect.name, {
     fontFamily: "Arial",
     fontSize: 24,
     fill: 0x000000,
   });
-  label.position.set(x + 20, y + 20);
-  logging ? console.log("label", x, y, rect, rect.getBounds()) : null;
+  label.position.set(
+    rect.getBounds().x + 20 - mainContainer.position.x,
+    rect.getBounds().y + 20 - mainContainer.position.y
+  );
+  logging ? console.log("label", rect, rect.getBounds()) : null;
   rect.addChild(label);
 }
 loadData ? loadDAS(DAS) : null;
@@ -390,6 +399,7 @@ mainContainer.on("mouseup", () => {
 
 mainContainer.on("pointermove", (event) => {
   if (!isDrawing) return;
+  if (isResizing) return;
   // Clear the stage
   mainContainer.removeChildren();
   // Add the image back to the stage

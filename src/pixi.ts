@@ -15,9 +15,9 @@ import { setState, triggerEvent } from "./bubble";
 import { DAS, att, colors, rects, rects2 } from "./test-data";
 import { onDragStart, onDragEnd, onDragMove, mouseOut, mouseOver, handleResizer, removeRectangle, addDragHand, getStartCoordinates, changeRectColor, logDrag, logResize} from "./events";
 //--begin html container setup, and pixi core element setup
-//const canvasElement = document.getElementById(`app`);
-//const mainDivContainer = document.getElementById(`mainContainer`);
+const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 //--end html container setup, and pixi core element setup
+PIXI.settings.ROUND_PIXELS = true;
 const ele = document.getElementById(`test`);
 //intialize pixi
 /*
@@ -59,38 +59,69 @@ ele.appendChild(app.view);
 //app.stage.addChild(mainContainer);
 //console.log(canvasElement,mainContainer);
 //create a sprite for the webpage and add it to the container
-const screenshot = PIXI.Texture.from(
-  `https://dd7tel2830j4w.cloudfront.net/d110/f1667856689965x312820165751551200/3b557354f48767d0cc7efb785a512fd02d9d8c1f177e8fb51092dea464924812?ignore_imgix=true`
-);
-const webpageSprite = PIXI.Sprite.from(screenshot);
-webpageSprite.interactive = true;
-/*
-*/
-mainContainer.addChild(webpageSprite);
-//scale the container to the width of the canvas. This scales everything inside
-//mainContainer.scale.set(app.view.width / mainContainer.width);
-app.stage.addChild(mainContainer);
-//end of screenshot setup
+let intialWebpageWidth,
+  intialWebpageHeight,
+  intialCanvasWidth,
+  intialCanvasHeight,
+  intialScale,
+  webpageSprite;
 
-//**begin creating the scrollbar
-const maxScroll = mainContainer.height - app.view.height;
-const scrollbar = new PIXI.Graphics();
-app.stage.addChild(scrollbar);
-//update the scrollbar position and size based on the container's scroll position. This is done on load and on resize using an event listener on the container
-canvasElement.addEventListener("wheel", (event) => {
-  // Update the container's y position based on the mouse wheel delta
-  mainContainer.position.y += event.deltaY;
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = true;
+const rectangles = [];
+let resizeTimeout = null;
 
-  // Clamp the container's position so that it can't scroll past the max scroll value
-  mainContainer.position.y = Math.max(mainContainer.position.y, -maxScroll);
-  mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+const screenshot = PIXI.Texture.fromURL(
+  `${imgixBaseURL}https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${canvasElement.clientWidth}`
+).then((texture) => {
+  console.log(`finished the texture`);
+  console.log(texture);
+  texture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
 
-  // Update the scrollbar position and size based on the container's scroll position
-  const scrollPercent = -mainContainer.position.y / maxScroll;
-  const scrollbarHeight =
-    app.view.height * (app.view.height / mainContainer.height);
-  const scrollbarY = scrollPercent * (app.view.height - scrollbarHeight);
-  scrollbar.clear();
+  webpageSprite = PIXI.Sprite.from(texture);
+  console.log(`finished the sprite`);
+  console.log(webpageSprite);
+  intialWebpageWidth = webpageSprite.width;
+  intialWebpageHeight = webpageSprite.height;
+  webpageSprite.intialWidth = webpageSprite.width;
+  mainContainer.addChild(webpageSprite);
+  mainContainer.interactive = true;
+
+  webpageSprite.scale.set(app.view.width / webpageSprite.width);
+
+  intialCanvasWidth = app.view.width;
+  intialCanvasHeight = app.view.height;
+  intialScale = intialCanvasWidth / intialWebpageWidth;
+  createScrollBar(mainContainer);
+});
+
+app.renderer.on(`resize`, handleResize);
+
+function handleResize(e) {
+  const intialSize = app.view.width;
+  console.log(`resize`);
+  webpageSprite.scale.set(app.view.width / intialWebpageWidth);
+  mainContainer.children.forEach((child) => {
+    child.scale.set(app.view.width / intialWebpageWidth);
+    console.log(`child.intialWidth: ${child.intialWidth}`);
+  });
+  //optional timeout to prevent the resize from firing too many times
+  clearTimeout(resizeTimeout);
+
+  resizeTimeout = setTimeout(() => {
+    console.log(`resize timeout`);
+    console.log(app.view.width / webpageSprite.intialWidth);
+  }, 100);
+}
+
+function createScrollBar(mainContainer) {
+  const maxScroll = mainContainer.height - app.view.height;
+  const scrollbar = new PIXI.Graphics();
+  let scrolling = false;
+  let scrollingTimeout = null;
+  scrollbar.interactive = true;
+  scrollbar.height = app.view.height;
   scrollbar.beginFill(0x808080);
   scrollbar.drawRect(app.view.width - 8, scrollbarY, 14, scrollbarHeight);
   scrollbar.endFill();
@@ -120,6 +151,11 @@ function handleResize(e) {
 //var DAS = properties.das;
 //var att = properties.att
 //var colors = properties.colors;
+//declare
+let startX, startY, endX, endY;
+let isDrawing = false;
+let logging = true;
+const rectangles = [];
 
 // Find the rectangle with the specified name
 function findRect(name) {

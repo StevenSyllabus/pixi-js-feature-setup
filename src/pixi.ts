@@ -151,15 +151,17 @@ const rectangle = new PIXI.Graphics();
 rectangle.beginFill(0xFFFF00, .5);
 rectangle.labelColor = "0x"+ c;
 rectangle.drawRect(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
+rectangle.intialWidth = createCoord.width;
 rectangle.endFill();
 //rectangle.interactive = true;
 rectangle.dragging = false;
-rectangle.name = id;
+rectangle.name = Math.round(Math.random() * 1000000).toString();
 rectangle.buttonMode = true;
 rectangle.resizingRadius = false;
 rectangle.myRectanglePosition = [
     createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
 ];
+//
 //set hitArea for dragging
 //const hitArea = new PIXI.Rectangle(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
 //rectangle.hitArea = hitArea;
@@ -287,7 +289,7 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
-  startX = event.global.x - mainContainer.position.x;
+  startX = (event.global.x - mainContainer.position.x);
   startY = event.global.y - mainContainer.position.y;
 });
 
@@ -306,7 +308,7 @@ mainContainer.on("pointermove", (event) => {
   mainContainer.addChild(webpageSprite);
 
   // Calculate the current position of the pointer
-  endX = event.global.x - mainContainer.position.x;
+  endX = (event.global.x - mainContainer.position.x) ;
   endY = event.global.y - mainContainer.position.y;
 
   // Calculate the dimensions of the rectangle

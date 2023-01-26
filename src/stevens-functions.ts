@@ -156,11 +156,13 @@ function handleResize(
   intialWebpageWidth: number
 ) {
   console.log(`resize`);
-
+let scaleIt = pixiApp.view.width / intialWebpageWidth;
   webpageSprite.scale.set(pixiApp.view.width / intialWebpageWidth);
   mainContainer.children.forEach((child) => {
     child.scale.set(pixiApp.view.width / intialWebpageWidth);
-    console.log(`child.intialWidth: ${child.intialWidth}`);
+    child.widthNow = child.intialWidth * scaleIt;
+    console.log(`child.intialWidth: ${child.intialWidth}`, "pixiAppWidth",pixiApp.view.width, "initialWP WIdth",
+    intialWebpageWidth, "scale", scaleIt, "child",child);
   });
   //optional timeout to prevent the resize from firing too many times
   //   clearTimeout(resizeTimeout);

@@ -98,6 +98,7 @@ const screenshot = PIXI.Texture.fromURL(
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
+  webpageSprite.intialScale = app.view.width / webpageSprite.width;
   scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
 });
 
@@ -169,7 +170,8 @@ rectangle.myRectanglePosition = [
 //add a hand
 rectangle.cursor = 'hand';
 
-//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea) : null;
+//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea)
+ : null;
 
 /*rectangle
     //.on('mouseover', mouseOver)
@@ -289,7 +291,8 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
-  startX = (event.global.x - mainContainer.position.x);
+
+  startX = event.global.x - mainContainer.position.x;
   startY = event.global.y - mainContainer.position.y;
 });
 

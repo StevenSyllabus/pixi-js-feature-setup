@@ -170,8 +170,7 @@ rectangle.myRectanglePosition = [
 //add a hand
 rectangle.cursor = 'hand';
 
-//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea)
- : null;
+//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea): null;
 
 /*rectangle
     //.on('mouseover', mouseOver)

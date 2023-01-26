@@ -92,13 +92,12 @@ const screenshot = PIXI.Texture.fromURL(
   webpageSprite.intialWidth = webpageSprite.width;
   mainContainer.addChild(webpageSprite);
   mainContainer.interactive = true;
-
+  webpageSprite.intialScale = app.view.width / webpageSprite.width;
   webpageSprite.scale.set(app.view.width / webpageSprite.width);
 
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
-  webpageSprite.intialScale = app.view.width / webpageSprite.width;
   scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
 });
 
@@ -152,17 +151,17 @@ const rectangle = new PIXI.Graphics();
 rectangle.beginFill(0xFFFF00, .5);
 rectangle.labelColor = "0x"+ c;
 rectangle.drawRect(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
-rectangle.intialWidth = createCoord.width;
 rectangle.endFill();
 //rectangle.interactive = true;
 rectangle.dragging = false;
-rectangle.name = Math.round(Math.random() * 1000000).toString();
+rectangle.name = Math.random().toString(16).substr(2, 8);//id;
+rectangle.intialScale = app.view.width / intialWebpageWidth;
 rectangle.buttonMode = true;
 rectangle.resizingRadius = false;
+rectangle.sortSize = createCoord.width * createCoord.height
 rectangle.myRectanglePosition = [
     createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
 ];
-//
 //set hitArea for dragging
 //const hitArea = new PIXI.Rectangle(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
 //rectangle.hitArea = hitArea;
@@ -170,7 +169,7 @@ rectangle.myRectanglePosition = [
 //add a hand
 rectangle.cursor = 'hand';
 
-//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea): null;
+//logging ? console.log('rectangle creation', rectangle, "hitArea", hitArea) : null;
 
 /*rectangle
     //.on('mouseover', mouseOver)
@@ -203,20 +202,7 @@ mainContainer.addChild(rectangle);
 const x = rectangle.position.x;
 const y = rectangle.position.y;
 addLabel(rectangle);
-/*
-    const label = new PIXI.Text(rectangle.name, {
-    fontFamily: 'Arial',
-    fontSize: 24,
-    fill: 0x000000,
-});
-label.position.set(
-  rectangle.getBounds().x + 20 - mainContainer.position.x,
-  rectangle.getBounds().y + 20 - mainContainer.position.y
-);
-logging ? console.log("label", rectangle.x, rectangle.y, rectangle, rectangle.getBounds()) : null;
-rectangle.addChild(label);
-*/
-addResizeHand(rectangle);
+//addResizeHand(rectangle);
 addDragHand(rectangle, rectangles);
 }
 
@@ -290,7 +276,6 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
-
   startX = event.global.x - mainContainer.position.x;
   startY = event.global.y - mainContainer.position.y;
 });
@@ -310,7 +295,7 @@ mainContainer.on("pointermove", (event) => {
   mainContainer.addChild(webpageSprite);
 
   // Calculate the current position of the pointer
-  endX = (event.global.x - mainContainer.position.x) ;
+  endX = event.global.x - mainContainer.position.x;
   endY = event.global.y - mainContainer.position.y;
 
   // Calculate the dimensions of the rectangle
@@ -428,6 +413,7 @@ function onDragMoveH(event, rect) {// Clear the stage
  
   const rectangle = new PIXI.Graphics();
   rectangle.name = rect.name;
+  rectangle.intialScale = app.view.width / intialWebpageWidth;
   rectangle.beginFill(0x0000ff, 0.5); // Transparent blue
   rectangle.drawRect(
     coordinates.startRectX,
@@ -440,9 +426,10 @@ function onDragMoveH(event, rect) {// Clear the stage
 
   // Add the rectangle to the stage
   rectangles.push(rectangle);
-
+  rectanglesSorted = reorderRectangles(rectangles);
   // Add all previously added rectangles back to the stage
-  rectangles.forEach((r) => mainContainer.addChild(r));
+  rectanglesSorted.forEach((r) => mainContainer.addChild(r));
+  rectanglesSorted.forEach((r) => console.log(r.sortSize));
 }
  
 // mouseup event listener
@@ -450,4 +437,10 @@ function onDragEndH(e, rectangle) {
   rect.resizing = false; 
   //this.interactive = false;
   console.log("dragEnd",isDrawing)
+}
+
+function reorderRectangles(rectangles) {
+  rectangles.sort((a, b) => {
+    return a.sortSize - b.sortSize;
+  });
 }

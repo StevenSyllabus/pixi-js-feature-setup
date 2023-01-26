@@ -404,6 +404,15 @@ function addResizeHand(rectangle: PIXI.Graphics) {
       );
       rectangle.endFill();
       console.log(rectangle);
+      rectangle.children.forEach((child) => {
+        //only if the child is not text
+        console.log(child);
+        if (!child.style) {
+          child.x += mousediffX;
+          child.y += mousediffY;
+        }
+      });
+
       //move the handle to match the rectangle
     }
   });

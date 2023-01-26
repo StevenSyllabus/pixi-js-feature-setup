@@ -52,7 +52,7 @@ const renderer = PIXI.autoDetectRenderer({
   //height: properties.bubble.height(),
   backgroundColor: 0x2980b9,
 });
-const app = new PIXI.Application({ resizeTo: window });
+const app = new PIXI.Application({ resizeTo: ele });
 const mainContainer = new PIXI.Container();
 
 mainContainer.interactive = false;

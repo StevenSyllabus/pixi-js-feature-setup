@@ -91,6 +91,7 @@ const screenshot = PIXI.Texture.fromURL(
   intialCanvasWidth = app.view.width;
   intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
+  webpageSprite.intialScale = app.view.width / webpageSprite.width;
   scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
 });
 
@@ -147,6 +148,7 @@ function createRect(x, y, w, h, c, id) {
   const hitArea = new PIXI.Rectangle(x, y, w, h);
   graphics.hitArea = hitArea;
   mainContainer.addChild(graphics);
+
   rectangles.push(graphics);
 }
 //click functions on rectangles
@@ -239,6 +241,7 @@ mainContainer.on("pointerup", (event) => {
   rectangle.endFill();
   rectangle.interactive = true;
   rectangle.dragging = false;
+  rectangle.intialScale = app.view.width / intialWebpageWidth;
   rectangle.name = Math.random().toString(16).substr(2, 8);
   rectangle.buttonMode = true;
   rectangle.resizingRadius = false;
@@ -334,6 +337,7 @@ mainContainer.on("mousedown", (event) => {
   }
   // The mouse is not over any of the rectangles, start drawing
   isDrawing = true;
+
   startX = event.global.x - mainContainer.position.x;
   startY = event.global.y - mainContainer.position.y;
 });

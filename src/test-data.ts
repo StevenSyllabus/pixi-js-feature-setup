@@ -217,12 +217,11 @@ var att = new Array(
     Color: "#38761d",
     "Name Search": "my attribute",
     "Last Used": 1674147290378,
-    _id: "1668800394117x917004865047887900",
-  }
-);
-//var colors = properties.colors;
-var colors = new Array("#57d9a3", "ff00ff", "38761d", "38761d", "38761d");
-//rects array (x,y,width,height,color,id)
+    "_id": "1668800394117x917004865047887900"
+  });
+  //var colors = properties.colors;
+  var colors = new Array("#57d9a3", "ff00ff", "38761d", "38761d", "38761d");
+  //rects array (x,y,width,height,color,id)
 var rects = new Array();
 rects[0] = new Array(1, 5, 15, 15, "0xDE3249", 1);
 rects[1] = new Array(100, 150, 250, 250, "0x800080", 2);

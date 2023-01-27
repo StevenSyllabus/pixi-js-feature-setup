@@ -1,8 +1,12 @@
 //drag events
 let logDrag = false;
 let logResize = true;
+let isDrawing = false;
+let isResizing = false;
+
 import * as PIXI from "pixi.js";
-export { logDrag, logResize };
+export { logDrag, logResize, isResizing };
+
 export function onDragStart(e, rectangle, rectangles) {
   const mousePosition = e.data.global;
   //rectangle.interactive = true; // Make the rectangle interactive
@@ -51,15 +55,21 @@ export function onDragEnd(e, rectangle, rectangles) {
 }
 
 export function onDragMove(e, rectangle, rectangles) {
-  const mousePosition = e.data.global;
-  if (rectangle.selected != true) return;
+    //const mousePosition = e.data.global;
+    if (rectangle.selected != true) return;
 
   //logDrag ? console.log('DraggingMove',rectangle.selected,rectangle) : null;
 
   rectangle.position.x += e.data.originalEvent.movementX;
   rectangle.position.y += e.data.originalEvent.movementY;
+  /*let createCoord = getStartCoordinates(rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
+  rectangle.myRectanglePosition = [
+    createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
+];
+console.log("createCoord",rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
+console.log("myRectPos", rectangle.myRectanglePosition);
+*/
 }
-
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;
@@ -97,83 +107,69 @@ export function getStartCoordinates(startX, startY, endX, endY) {
 
 export function addDragHand(
   rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
+  rectangles
 ) {
   const png = PIXI.Texture.from(
-    `https://s3.amazonaws.com/appforest_uf/d110/f1674585363384x114691738198125620/drag-handle-corner.png?ignore_imgix=true`
+    `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
   );
   const handle = PIXI.Sprite.from(png);
   handle.interactive = true;
-  var handlePosAdjustX = 40;
-  var handlePosAdjustY = 40;
+  var handlePosAdjustX = -30;
+  var handlePosAdjustY = 0;
   var scaleHandle = 0.75;
   handle.position.set(
     rectangle.myRectanglePosition[0] +
-      rectangle.myRectanglePosition[2] -
+      rectangle.myRectanglePosition[2] +
       handlePosAdjustX,
     rectangle.myRectanglePosition[1] +
-      rectangle.myRectanglePosition[3] -
       handlePosAdjustY
   );
   //console.log("rectBounds",(rectangle.myRectanglePosition[0] + rectangle.myRectanglePosition[2] - handlePosAdjustX), (rectangle.myRectanglePosition[1] + rectangle.myRectanglePosition[3] - handlePosAdjustY));
   const hitArea = new PIXI.Rectangle(0, 0, 64 * scaleHandle, 64 * scaleHandle);
   handle.hitArea = hitArea;
+  handle.buttonMode = true;
   logResize ? console.log("handle-hitarea", hitArea) : null;
   handle.scale.set(scaleHandle, scaleHandle);
   rectangle.addChild(handle);
+  //handleEvents(handle, rectangle);
   handle
     .on("pointerdown", function (e) {
-      logResize
-        ? console.log("handle-pointerdown", e.global.data.x, e.global.data.y)
-        : null;
-      rectangle.resizing = true;
-      e.stopPropagation();
+      rectangle.selected = true;
+      isDrawing = false;
+      onDragStart(e,rectangle,rectangles);
     })
+    .on('pointermove', function(e){
+      onDragMove(e,rectangle,rectangles);
+  }) 
     .on("pointerup", function (e) {
-      logResize
-        ? console.log("handle-pointerup", e.global.x, e.global.data.y)
-        : null;
-      rectangle.resizing = false;
-      e.stopPropagation();
+      isDrawing = false;
+      rectangle.selected = false;
+      onDragEnd(e,rectangle,rectangles);
     })
-    /* .on('pointerupoutside', function(e){
-        logResize ? console.log('handle-pointerupoutside',e.global.data.x, e.global.data.y) : null;
-        this.resizing = false;
-        e.stopPropagation();}) 
-        */
-    .on("pointermove", function (e) {
-      //logResize ? console.log('handle-pointer-move',e.global.data.x, e.global.data.y) : null;
-      //rectangle.resizing = true;
-      //HANDLE RESIZING DISABLED PLACEHOLDER
-      //rectangle.resizing ? handleResizerRect(e, rectangle, mainContainer, rectangles, webpageSprite) : null;
-      e.stopPropagation();
-    });
+    .on('pointerupoutside', function(e){
+      isDrawing = false;
+      rectangle.selected = false;
+      onDragEnd(e,rectangle,rectangles);
+      }) 
 }
-export function handleResizerRect(
-  e,
-  rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
-) {
-  logResize
-    ? console.log("handle-resizer", rectangle, rectangle.resizing)
-    : null;
-  if (rectangle.resizing) {
-    // Clear the stage
-    mainContainer.removeChildren();
-    const rect = new PIXI.Graphics();
-    rect.name = rectangle.name;
-    removeRectangle(rectangle, rectangles);
+
+export function handleResizerRect (e, rectangle, mainContainer, rectangles, webpageSprite) {
+    logResize ? console.log('handle-resizer', rectangle, rectangle.resizing) : null;
+    if (isResizing) {
+     // Clear the stage
+     mainContainer.removeChildren();
+     const rect = new PIXI.Graphics();
+     rect.name = rectangle.name;
+     removeRectangle(rectangle, rectangles);
+     rectangle.clear();
 
     // Add the image back to the stage
     mainContainer.addChild(webpageSprite);
 
     // Calculate the current position of the pointer
-    let endX = e.global.data.x;
-    let endY = e.global.data.y;
+    let endX = e.globalX;
+    let endY = e.globalY;
+    logResize ? console.log("handle-endX-endY", endX, endY) : null;
     // Calculate the dimensions of the rectangle
     let coordinates = getStartCoordinates(
       rectangle.myRectanglePosition[0],
@@ -199,6 +195,22 @@ export function handleResizerRect(
 
     rectangles.forEach((r) => mainContainer.addChild(r));
   }
+}
+export function handleResizerRect2 (e, rectangle, mainContainer, rectangles, webpageSprite) {
+  var initialMousePosX = rectangle.myRectanglePosition[0];
+  var initialMousePosY = rectangle.myRectanglePosition[1];
+  var currentMousePosY,currentMousePosX;
+var initialRectWidth = rectangle.width;
+var initialRectHeight = rectangle.height;
+var currentMousePosX = e.data.global.x;
+  var currentMousePosY = e.data.global.y;
+  var deltaX = currentMousePosX - initialMousePosX;
+  var deltaY = currentMousePosY - initialMousePosY;
+  rectangle.width = initialRectWidth + deltaX;
+  rectangle.height = initialRectHeight + deltaY;
+  //handle.x = rectangle.width - handle.width/2;
+  //handle.y = rectangle.height - handle.height/2;
+  console.log("dragMove",isDrawing)
 }
 
 export function removeRectangle(rectangle, array) {

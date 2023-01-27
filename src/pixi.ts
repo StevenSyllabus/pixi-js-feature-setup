@@ -6,6 +6,7 @@ let isDrawing = false;
 let logging = false;
 let logRectEvents = false;
 let loadData = true;
+let logEvents = true;
 let resizeActive = false;
 var initialMousePosX,initialMousePosY,currentMousePosY,currentMousePosX;
 var initialRectWidth;
@@ -204,11 +205,12 @@ function addLabel(rect) {
 //Listeners
 
 mainContainer.on("pointerup", (event) => {
+  logEvents ? console.log("pointerup",event.target.name,"start",startX,startY) : null;
   if (event.target.name == "dragHandle") {
     isDrawing = false;
     event.target.parent.selected = false;
     onDragEnd(event,event.target.parent,rectangles);
-    logDrag ? console.log("mouseup-DragEvent,target,target-parent", event.target.name, event.target.parent.name ) : null;
+    logDrag ? console.log("pointerup-DragEvent,target,target-parent", event.target.name, event.target.parent.name ) : null;
     mainContainer.off("pointermove");
     return;
   }
@@ -218,7 +220,8 @@ mainContainer.on("pointerup", (event) => {
   }
   if (event.target.name == "mainContainer" && event.target.isDrawing) {
     //stop if comes from reset
-   if (startX == 0 && startY == 0 ) {eventReset();return;}
+   if (startX == 0 && startY == 0 ) {eventReset();
+    return;}
 
     mainContainer.isDrawing = false;
     rectangles.forEach((r) => (r.selected = false));
@@ -245,7 +248,10 @@ mainContainer.on("pointerup", (event) => {
     eventReset();
 }
 
-eventReset();});
+eventReset();
+logEvents ? console.log("pointerup",event.target.name,"start",startX,startY) : null;
+});
+
 mainContainer.on("pointerdown", (event) => {
   logDrag ? console.log("pointerdown-Event,target,target-parent", event.target.name, event.target.parent.name ) : null;
   if (event.target.name == "dragHandle") {
@@ -267,6 +273,9 @@ mainContainer.on("pointerdown", (event) => {
     event.target.isDrawing = true;
     startX = event.global.x - mainContainer.position.x;
     startY = event.global.y - mainContainer.position.y;
+    endX = event.global.x - mainContainer.position.x;
+    endY = event.global.y - mainContainer.position.y;
+
     wrapPointermove (event,event.target)
 }
 });
@@ -314,10 +323,6 @@ function eventReset (){
   resizeHandles.forEach((r) => (r.off("pointermove")));
   mainContainer.off("pointermove");
   mainContainer.isDrawing = false;
-  startX = 0;
-  startY = 0;
-  endX = 0;
-  endY = 0;
 }
 
 function wrapPointermove (event,rectangle) {

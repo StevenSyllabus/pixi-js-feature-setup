@@ -1,6 +1,6 @@
 //drag events
-let logDrag = false;
-let logResize = true;
+let logDrag = true;
+let logResize = false;
 let isDrawing = false;
 let isResizing = false;
 
@@ -56,7 +56,7 @@ export function onDragMove(e, rectangle, rectangles) {
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;
-  logDrag ? console.log(square) : null;
+  //logDrag ? console.log(square) : null;
   sq.clear();
   sq.beginFill(color, 0.5);
   sq.lineStyle(square.lineStyle);
@@ -66,7 +66,7 @@ export function changeRectColor(sq, color) {
     square.myRectanglePosition[2],
     square.myRectanglePosition[3]
   );
-  logDrag
+  /*logDrag
     ? console.log(
         "squareDeets",
         square.myRectanglePosition[0],
@@ -75,6 +75,7 @@ export function changeRectColor(sq, color) {
         square.myRectanglePosition[3]
       )
     : null;
+    */
   sq.endFill();
 }
 

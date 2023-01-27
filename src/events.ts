@@ -9,8 +9,9 @@ export { logDrag, logResize, isResizing };
 
 export function onDragStart(e, rectangle, rectangles) {
   const mousePosition = e.data.global;
-  //rectangle.interactive = true; // Make the rectangle interactive
-  //check for resize
+  changeRectColor(rectangle, rectangle.labelColor);
+  rectangle.interactive = true; // Make the rectangle interactive
+  rectangle.dragging = true;
   if (rectangle.resizing) {
     logResize ? console.log("resizing active", mousePosition) : null;
     return;
@@ -19,31 +20,18 @@ export function onDragStart(e, rectangle, rectangles) {
   logDrag
     ? console.log("myRectanglePosition", rectangle.myRectanglePosition)
     : null;
-  if (
-    mousePosition.x - rectangle.myRectanglePosition[0] < 30 &&
-    mousePosition.y - rectangle.myRectanglePosition[1] < 30
-  ) {
-    logDrag ? console.log("Resizing Radius") : null;
-    //rectangle.resizingRadius=true
-    //rectangle.dragging = true;
+ 
     rectangle.draggingOffset = [
       mousePosition.x - rectangle.myRectanglePosition[0],
       mousePosition.y - rectangle.myRectanglePosition[1],
     ];
-  } else {
-    //logDrag ? console.log('Dragging') : null;
-    rectangle.dragging = true;
-    rectangle.draggingOffset = [
-      mousePosition.x - rectangle.myRectanglePosition[0],
-      mousePosition.y - rectangle.myRectanglePosition[1],
-    ];
-  }
+
 }
 
 export function onDragEnd(e, rectangle, rectangles) {
   //rectangle.selected = false;
-  changeRectColor(rectangle, rectangle.labelColor);
-  rectangles.forEach((r) => (r.selected = false));
+  changeRectColor(rectangle, rectangle.oldColor);
+  rectangles.forEach((r) => (r.dragging = false));
   logDrag
     ? console.log(
         "DragEnd,color,interactive,selected",
@@ -52,24 +40,19 @@ export function onDragEnd(e, rectangle, rectangles) {
         rectangle.selected
       )
     : null;
+    rectangle.off("pointermove");
 }
 
 export function onDragMove(e, rectangle, rectangles) {
-    //const mousePosition = e.data.global;
-    if (rectangle.selected != true) return;
-
-  //logDrag ? console.log('DraggingMove',rectangle.selected,rectangle) : null;
-
+  //if (rectangle.dragging != true) return;
+  if (rectangle.dragging) {
   rectangle.position.x += e.data.originalEvent.movementX;
   rectangle.position.y += e.data.originalEvent.movementY;
-  /*let createCoord = getStartCoordinates(rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
-  rectangle.myRectanglePosition = [
-    createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height
-];
-console.log("createCoord",rectangle._bounds.minX, rectangle._bounds.minY, rectangle.myRectanglePosition[2], rectangle.myRectanglePosition[3]);
-console.log("myRectPos", rectangle.myRectanglePosition);
-*/
+  logDrag ? console.log("onDragMove") : null;
+  changeRectColor(rectangle, rectangle.labelColor);
 }
+}
+
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;
@@ -128,29 +111,10 @@ export function addDragHand(
   const hitArea = new PIXI.Rectangle(0, 0, 64 * scaleHandle, 64 * scaleHandle);
   handle.hitArea = hitArea;
   handle.buttonMode = true;
+  handle.name = "dragHandle";
   logResize ? console.log("handle-hitarea", hitArea) : null;
   handle.scale.set(scaleHandle, scaleHandle);
   rectangle.addChild(handle);
-  //handleEvents(handle, rectangle);
-  handle
-    .on("pointerdown", function (e) {
-      rectangle.selected = true;
-      isDrawing = false;
-      onDragStart(e,rectangle,rectangles);
-    })
-    .on('pointermove', function(e){
-      onDragMove(e,rectangle,rectangles);
-  }) 
-    .on("pointerup", function (e) {
-      isDrawing = false;
-      rectangle.selected = false;
-      onDragEnd(e,rectangle,rectangles);
-    })
-    .on('pointerupoutside', function(e){
-      isDrawing = false;
-      rectangle.selected = false;
-      onDragEnd(e,rectangle,rectangles);
-      }) 
 }
 
 export function handleResizerRect (e, rectangle, mainContainer, rectangles, webpageSprite) {

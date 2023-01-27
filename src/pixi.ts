@@ -35,6 +35,7 @@ import {
   removeRectangle,
   addDragHand,
   addResizeHand,
+  addResizeHand,
   getStartCoordinates,
   changeRectColor,
   logDrag,
@@ -55,7 +56,7 @@ const renderer = PIXI.autoDetectRenderer({
   //height: properties.bubble.height(),
   backgroundColor: 0x2980b9,
 });
-const app = new PIXI.Application({ resizeTo: window });
+const app = new PIXI.Application({ resizeTo: ele });
 const mainContainer = new PIXI.Container();
 
 mainContainer.interactive = false;
@@ -119,6 +120,7 @@ app.renderer.on(`resize`, function (event) {
 //var colors = properties.colors;
 //declare
 
+// Find the rectangle with the specified names
 // Find the rectangle with the specified names
 function findRect(name) {
   const foundRectangle = rectangles.find((r) => r.name === name);
@@ -306,7 +308,7 @@ mainContainer.on("mouseup", (event) => {
     // Add all previously added rectangles back to the stage
     rectangles.forEach((r) => mainContainer.addChild(r));
 
-  let createCoord = getStartCoordinates(startX, startY, endX, endY);
+  //let createCoord = getStartCoordinates(startX,startY,endX,endY);
   logging ? console.log("createCoord", createCoord) : null;
 
     //stop small box creation - Placeholder

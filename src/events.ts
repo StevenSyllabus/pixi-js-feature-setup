@@ -1,4 +1,5 @@
 //drag events
+//@ts-nocheck
 let logDrag = false;
 let logResize = false;
 let isDrawing = false;
@@ -53,7 +54,6 @@ export function onDragMove(e, rectangle, rectangles) {
   changeRectColor(rectangle, rectangle.labelColor);
 }
 }
-
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;

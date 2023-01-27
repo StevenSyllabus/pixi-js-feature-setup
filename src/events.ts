@@ -1,5 +1,5 @@
 //drag events
-let logDrag = true;
+let logDrag = false;
 let logResize = false;
 let isDrawing = false;
 let isResizing = false;
@@ -32,6 +32,7 @@ export function onDragEnd(e, rectangle, rectangles) {
   //rectangle.selected = false;
   changeRectColor(rectangle, rectangle.oldColor);
   rectangles.forEach((r) => (r.dragging = false));
+  rectangles.forEach((r) => (r.interactive = false));
   logDrag
     ? console.log(
         "DragEnd,color,interactive,selected",
@@ -175,7 +176,7 @@ var currentMousePosX = e.data.global.x;
   rectangle.height = initialRectHeight + deltaY;
   //handle.x = rectangle.width - handle.width/2;
   //handle.y = rectangle.height - handle.height/2;
-  console.log("dragMove",isDrawing)
+  //console.log("dragMove",isDrawing)
 }
 
 export function removeRectangle(rectangle, array) {

@@ -6,7 +6,7 @@ let isDrawing = false;
 let logging = false;
 let logRectEvents = false;
 let loadData = true;
-let logEvents = true;
+let logEvents = false;
 let resizeActive = false;
 var initialMousePosX,initialMousePosY,currentMousePosY,currentMousePosX;
 var initialRectWidth;
@@ -157,7 +157,7 @@ rectangle.labelColor = "0x"+ c;
 rectangle.oldColor = "0xFFFF00";
 rectangle.drawRect(createCoord.startRectX, createCoord.startRectY, createCoord.width, createCoord.height);
 rectangle.endFill();
-//rectangle.interactive = true;
+rectangle.interactive = false;
 rectangle.dragging = false;
 rectangle.name = Math.random().toString(16).substr(2, 8);//id;
 rectangle.intialScale = app.view.width / intialWebpageWidth;
@@ -246,6 +246,7 @@ mainContainer.on("pointerup", (event) => {
     
     createRectangle(createCoord, "DE3249", "temp");
     eventReset();
+    return;
 }
 
 eventReset();
@@ -276,9 +277,10 @@ mainContainer.on("pointerdown", (event) => {
     endX = event.global.x - mainContainer.position.x;
     endY = event.global.y - mainContainer.position.y;
 
-    wrapPointermove (event,event.target)
+    wrapPointermove (event)
+    return;
 }
-});
+})
 /*
 mainContainer.on("mouseup", (event) => {
   if (event.target.name == "dragHandle") {
@@ -325,8 +327,8 @@ function eventReset (){
   mainContainer.isDrawing = false;
 }
 
-function wrapPointermove (event,rectangle) {
-rectangle.on("pointermove", (event) => {
+function wrapPointermove (event) {
+event.target.on("pointermove", (event) => {
   logDrag ? console.log("pmactive",event.target.name) : null;
   if (event.target.name == "dragHandle") {
       onDragMove(event, event.target.parent, rectangles);
@@ -444,7 +446,7 @@ function onDragStartH(event) {
   initialRectWidth = event.target.parent.width;
   initialRectHeight = event.target.parent.height;
   //isResizing = true;.tgppare
-  console.log("dragStartH",isDrawing,event.target.parent.name);
+  //console.log("dragStartH",isDrawing,event.target.parent.name);
   event.target.on('pointermove', function(event){
     event.target.parent.resizing = true;
     isDrawing = false;
@@ -537,7 +539,7 @@ function onDragMoveH(event) {/*
   //rectanglesSorted.forEach((r) => mainContainer.addChild(r));
   //rectanglesSorted.forEach((r) => console.log(r.sortSize));
   */
- console.log("resizemove");
+ logging ? console.log("resizemove") : null;
 }
  
 // mouseup event listener
@@ -545,7 +547,7 @@ function onDragEndH(event) {
   event.target.parent.resizing = false; 
   event.target.off('pointermove');
   //this.interactive = false;
-  console.log("ResizeEnd",event.target.parent.resizing)
+  logDrag ? console.log("ResizeEnd",event.target.parent.resizing) : null;
 }
 
 function reorderRectangles(rectangles) {

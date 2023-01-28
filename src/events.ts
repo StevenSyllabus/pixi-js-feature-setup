@@ -30,6 +30,7 @@ export function onDragStart(e, rectangle, rectangles) {
 
 export function onDragEnd(e, rectangle, rectangles) {
   //rectangle.selected = false;
+
   changeRectColor(rectangle, rectangle.oldColor);
   rectangles.forEach((r) => (r.dragging = false));
   rectangles.forEach((r) => (r.interactive = false));
@@ -49,6 +50,11 @@ export function onDragMove(e, rectangle, rectangles) {
   if (rectangle.dragging) {
     rectangle.position.x += e.data.originalEvent.movementX;
     rectangle.position.y += e.data.originalEvent.movementY;
+    rectangle.lastMoveX = rectangle.position.x;
+    rectangle.lastMoveY = rectangle.position.y;
+    rectangle.lastXScale = 1;
+    rectangle.lastYScale = 1;
+
     logDrag ? console.log("onDragMove") : null;
     changeRectColor(rectangle, rectangle.labelColor);
   }

@@ -61,7 +61,6 @@ function createScrollBar(
           pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
         const scrollbarY =
           scrollPercent * (pixiApp.view.height - scrollbarHeight);
-        //this mousedif is way wrong. It should be the difference between the mouse's y position and the scrollbar's y position
 
         const mouseDif = e.y - scrollbar.lastMouseY;
         console.log(mouseDif);

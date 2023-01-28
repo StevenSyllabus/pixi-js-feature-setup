@@ -166,14 +166,38 @@ function handleResize(
   webpageSprite: PIXI.Sprite,
   intialWebpageWidth: number
 ) {
-  console.log(`resize`);
   let intialScale = pixiApp.view.width / intialWebpageWidth;
+  let endingWidth, newPercent;
 
   mainContainer.children.forEach((child) => {
     let childIntialScale = child.intialScale;
-    let newScale = intialScale / childIntialScale;
+    let childIntialPosition = child.position.x;
 
-    child.scale.set(newScale);
+    let newScale = intialScale / childIntialScale;
+    let startingWidth = mainContainer.width;
+
+    if (child.name === `webpage`) {
+      console.log(`webpage`);
+      child.scale.set(newScale);
+      endingWidth = mainContainer.width;
+      newPercent = endingWidth / startingWidth;
+      console.log(`growth and shrink new percetn`, newPercent);
+      console.log(`starting width`, startingWidth);
+      console.log(`ending width`, endingWidth);
+    } else if (child.lastMoveX || child.lastMoveY) {
+      child.scale.set(newScale);
+      if (newPercent !== 1) {
+        child.position.x = child.position.x * newPercent;
+        child.position.y = child.position.y * newPercent;
+      }
+      if (newPercent === 1) {
+        child.scale.set(newScale);
+        child.position.x = child.position.x * newPercent;
+        child.position.y = child.position.y * newPercent;
+      }
+    } else {
+      child.scale.set(newScale);
+    }
   });
   //optional timeout to prevent the resize from firing too many times
   //   clearTimeout(resizeTimeout);

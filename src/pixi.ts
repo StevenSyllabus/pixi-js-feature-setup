@@ -97,6 +97,7 @@ const screenshot = PIXI.Texture.fromURL(
   webpageSprite.intialWidth = webpageSprite.width;
   mainContainer.addChild(webpageSprite);
   mainContainer.interactive = true;
+  webpageSprite.name = `webpage`;
 
   webpageSprite.scale.set(app.view.width / webpageSprite.width);
 
@@ -105,6 +106,7 @@ const screenshot = PIXI.Texture.fromURL(
   intialScale = intialCanvasWidth / intialWebpageWidth;
   webpageSprite.intialScale = app.view.width / webpageSprite.width;
   scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
+  loadData ? loadDAS(DAS) : null;
 });
 
 app.renderer.on(`resize`, function (event) {
@@ -490,6 +492,7 @@ function handleEvents (handle, rectangle) {
 // mousedown event listener
 function onDragStartH(event) {
   event.target.parent.interactive = true;
+
   initialMousePosX = event.target.parent.x;
   initialMousePosY = event.target.parent.y;
   initialRectWidth = event.target.parent.width;
@@ -605,4 +608,3 @@ function reorderRectangles(rectangles) {
     return a.sortSize - b.sortSize;
   });
 }
-loadData ? loadDAS(DAS) : null;

@@ -52,8 +52,6 @@ export function onDragMove(e, rectangle, rectangles) {
     rectangle.position.y += e.data.originalEvent.movementY;
     rectangle.lastMoveX = rectangle.position.x;
     rectangle.lastMoveY = rectangle.position.y;
-    rectangle.lastXScale = 1;
-    rectangle.lastYScale = 1;
 
     logDrag ? console.log("onDragMove") : null;
     changeRectColor(rectangle, rectangle.labelColor);

@@ -174,16 +174,12 @@ function handleResize(
     let childIntialPosition = child.position.x;
 
     let newScale = intialScale / childIntialScale;
-    let startingWidth = mainContainer.width;
+    let startingWidth = webpageSprite.width;
 
     if (child.name === `webpage`) {
-      console.log(`webpage`);
       child.scale.set(newScale);
-      endingWidth = mainContainer.width;
+      endingWidth = webpageSprite.width;
       newPercent = endingWidth / startingWidth;
-      console.log(`growth and shrink new percetn`, newPercent);
-      console.log(`starting width`, startingWidth);
-      console.log(`ending width`, endingWidth);
     } else if (child.lastMoveX || child.lastMoveY) {
       child.scale.set(newScale);
       if (newPercent !== 1) {
@@ -191,16 +187,11 @@ function handleResize(
         child.position.y = child.position.y * newPercent;
       }
       if (newPercent === 1) {
-        child.scale.set(newScale);
-        child.position.x = child.position.x * newPercent;
-        child.position.y = child.position.y * newPercent;
       }
     } else {
       child.scale.set(newScale);
     }
   });
-  //optional timeout to prevent the resize from firing too many times
-  //   clearTimeout(resizeTimeout);
 
   //   resizeTimeout = setTimeout(() => {
   //     console.log(`resize timeout`);

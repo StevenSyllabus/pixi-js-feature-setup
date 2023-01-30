@@ -177,13 +177,9 @@ function handleResize(
     let startingWidth = webpageSprite.width;
 
     if (child.name === `webpage`) {
-      console.log(`webpage`);
       child.scale.set(newScale);
       endingWidth = webpageSprite.width;
       newPercent = endingWidth / startingWidth;
-      console.log(`growth and shrink new percetn`, newPercent);
-      console.log(`starting width`, startingWidth);
-      console.log(`ending width`, endingWidth);
     } else if (child.lastMoveX || child.lastMoveY) {
       child.scale.set(newScale);
       if (newPercent !== 1) {

@@ -215,6 +215,7 @@ function addLabel(rect) {
 
 function createExistingRect(createCoord, color, name) {
   // Create graphics
+
   if (color == "") {
     color = highlightColor;
   }
@@ -246,7 +247,9 @@ function createExistingRect(createCoord, color, name) {
     .on("pointerout", onRectangleOut);
   // remove it from current ceration and chose new color for next one
   addLabel(currentRectangle);
-  console.log("currentRect", currentRectangle);
+  console.log("currentRect that im testing", currentRectangle);
+  currentRectangle.intialScale = app.view.width / intialWebpageWidth;
+
   currentRectangle = null;
 }
 
@@ -291,47 +294,48 @@ mainContainer.on("pointerdown", (e) => {
   if (inputMode == InputModeEnum.select) {
     //PLACEHOLDER for select function
     selectRect(e.target);
-}
+  }
 });
 
-mainContainer.on('pointermove', (e) => {
-    // Do this routine only if in create mode and have started creation
-    // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
-    if (inputMode == InputModeEnum.create && startPosition) {
-        // get new global position from event
-        let currentPosition = e.global;
-        let {
-            start,
-            size
-        } = getStartAndSize(currentPosition, startPosition, "draw")
-        if (size.x > 5 && size.y > 5) {
-            if (!currentRectangle) {
-                currentRectangle = new PIXI.Graphics()
-                    .beginFill("0x" + highlightColor, .5)
-                    .lineStyle({
-                        color: "0x" + highlightColor,
-                        alpha: 0.5,
-                        width: 1
-                    })
-                    .drawRect(0, 0, size.x, size.y)
-                    .endFill()
-                currentRectangle.labelColor = "0x" + highlightColor;
-                currentRectangle.oldColor = highlightColor;
-                currentRectangle.name = "";
-                currentRectangle.position.copyFrom(start)
-                addLabel(currentRectangle);
-                mainContainer.addChild(currentRectangle)
-            } else {
-                scaleRectB(currentRectangle, currentPosition)
-            }
-        } else {
-            if (currentRectangle) {
-                mainContainer.removeChild(currentRectangle);
-                currentRectangle = null
-            }
-        }
-
+mainContainer.on("pointermove", (e) => {
+  // Do this routine only if in create mode and have started creation
+  // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
+  if (inputMode == InputModeEnum.create && startPosition) {
+    // get new global position from event
+    let currentPosition = e.global;
+    let { start, size } = getStartAndSize(
+      currentPosition,
+      startPosition,
+      "draw"
+    );
+    if (size.x > 5 && size.y > 5) {
+      if (!currentRectangle) {
+        currentRectangle = new PIXI.Graphics()
+          .beginFill("0x" + highlightColor, 0.5)
+          .lineStyle({
+            color: "0x" + highlightColor,
+            alpha: 0.5,
+            width: 1,
+          })
+          .drawRect(0, 0, size.x, size.y)
+          .endFill();
+        currentRectangle.labelColor = "0x" + highlightColor;
+        currentRectangle.oldColor = highlightColor;
+        currentRectangle.name = "";
+        currentRectangle.intialScale = app.view.width / intialWebpageWidth;
+        currentRectangle.position.copyFrom(start);
+        addLabel(currentRectangle);
+        mainContainer.addChild(currentRectangle);
+      } else {
+        scaleRectB(currentRectangle, currentPosition);
+      }
+    } else {
+      if (currentRectangle) {
+        mainContainer.removeChild(currentRectangle);
+        currentRectangle = null;
+      }
     }
+  }
 });
 
 mainContainer.on("pointerup", (e) => {
@@ -453,35 +457,40 @@ function onRectangleOut() {
 
 // Normalize start and size of square so we always have top left corner as start and size is always +
 function getStartAndSize(pointA, pointB, type) {
-    let deltaX = pointB.x - pointA.x;
-    let deltaY = pointB.y - pointA.y;
-    let absDeltaX = Math.abs(deltaX)
-    let absDeltaY = Math.abs(deltaY)
-    let startX = deltaX > 0 ? pointA.x : pointB.x
-    let startY = deltaY > 0 ? pointA.y : pointB.y
-    if (type == "scaleRect") {
+  let deltaX = pointB.x - pointA.x;
+  let deltaY = pointB.y - pointA.y;
+  let absDeltaX = Math.abs(deltaX);
+  let absDeltaY = Math.abs(deltaY);
+  let startX = deltaX > 0 ? pointA.x : pointB.x;
+  let startY = deltaY > 0 ? pointA.y : pointB.y;
+  if (type == "scaleRect") {
     return {
-        start: new PIXI.Point(startX, startY),
-        size: new PIXI.Point(absDeltaX, absDeltaY)
-    }} else if (type == "draw") {    return {
-        start: new PIXI.Point(startX - mainContainer.position.x, startY - mainContainer.position.y),
-        size: new PIXI.Point(absDeltaX, absDeltaY)
-    }
-        
-    }
+      start: new PIXI.Point(startX, startY),
+      size: new PIXI.Point(absDeltaX, absDeltaY),
+    };
+  } else if (type == "draw") {
+    return {
+      start: new PIXI.Point(
+        startX - mainContainer.position.x,
+        startY - mainContainer.position.y
+      ),
+      size: new PIXI.Point(absDeltaX, absDeltaY),
+    };
+  }
 }
 
 //these two are slightly different, could probably be combined
 function scaleRect(resizeRectange, dragController) {
-    //currentPosition)
-    let {
-        start,
-        size
-    } = getStartAndSize(startPosition, dragController.position, "scaleRect")
-    if (size.x < 20 || size.y < 20) return
-    // When we scale rect we have to give it new cordinates so we redraw it
-    // in case of sprite we would do this a bit differently with scale property,
-    // for simple geometry this is better solution because scale propagates to children
+  //currentPosition)
+  let { start, size } = getStartAndSize(
+    startPosition,
+    dragController.position,
+    "scaleRect"
+  );
+  if (size.x < 20 || size.y < 20) return;
+  // When we scale rect we have to give it new cordinates so we redraw it
+  // in case of sprite we would do this a bit differently with scale property,
+  // for simple geometry this is better solution because scale propagates to children
 
   let startPositionController = new PIXI.Point(
     dragController.position.x - 20,
@@ -499,25 +508,32 @@ function scaleRect(resizeRectange, dragController) {
     .drawRect(0, 0, size.x, size.y)
     .endFill();
 
-    dragController.position.copyFrom(startPositionController)
-    console.log("scaleRect, startPos, startPosController,dragcontroller,mainContainer",startPosition,startPositionController,dragController.position,mainContainer.position);
+  dragController.position.copyFrom(startPositionController);
+  console.log(
+    "scaleRect, startPos, startPosController,dragcontroller,mainContainer",
+    startPosition,
+    startPositionController,
+    dragController.position,
+    mainContainer.position
+  );
 }
 
 function scaleRectB(resizeRectange, currentPosition) {
-    let {start,size} = getStartAndSize(startPosition, currentPosition, "draw");
-    console.log("scaleRectB");
-    if (size.x < 5 || size.y < 5) return
-    // When we scale rect we have to give it new cordinates
-    resizeRectange.clear()
-    resizeRectange.position.copyFrom(start)
-    resizeRectange.beginFill("0x"+ resizeColor, .5)
-        .lineStyle({
-            color: "0x"+resizeColor,
-            alpha: 0.5,
-            width: 1
-        })
-        .drawRect(0, 0, size.x, size.y)
-        .endFill()
+  let { start, size } = getStartAndSize(startPosition, currentPosition, "draw");
+  console.log("scaleRectB");
+  if (size.x < 5 || size.y < 5) return;
+  // When we scale rect we have to give it new cordinates
+  resizeRectange.clear();
+  resizeRectange.position.copyFrom(start);
+  resizeRectange
+    .beginFill("0x" + resizeColor, 0.5)
+    .lineStyle({
+      color: "0x" + resizeColor,
+      alpha: 0.5,
+      width: 1,
+    })
+    .drawRect(0, 0, size.x, size.y)
+    .endFill();
 }
 
 function moveRect(resizeRectange, dragController) {
@@ -535,8 +551,8 @@ function moveRect(resizeRectange, dragController) {
   resizeRectange.position.copyFrom(startPosition);
   dragController.position.copyFrom(startPositionController);
 }
-function selectRect(rectangle){
-    alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
+function selectRect(rectangle) {
+  alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
 }
 
 function onDragMoveNew(event) {

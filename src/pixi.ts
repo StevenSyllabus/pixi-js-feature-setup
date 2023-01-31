@@ -129,6 +129,7 @@ const screenshot = PIXI.Texture.fromURL(
     intialScale = intialCanvasWidth / intialWebpageWidth;
     webpageSprite.intialScale = app.view.width / webpageSprite.width;
     scrollBar < PIXI.Graphics > = createScrollBar(mainContainer, app, ele);
+    loadData ? loadDAS(DAS) : null;
 });
 
 app.renderer.on(`resize`, function(event) {
@@ -186,8 +187,8 @@ let InputModeEnum = {
     move: 4
 };
 
-app.stage.interactive = true;
-app.stage.hitArea = app.screen;
+mainContainer.interactive = true;
+mainContainer.hitArea = mainContainer.screen;
 
 // Load textures for edit
 const hrefMove = "https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png";
@@ -253,7 +254,7 @@ function createExistingRect(createCoord, color, name) {
     currentRectangle.position.copyFrom(new PIXI.Point(createCoord.startRectX,
         createCoord.startRectY));
     //addLabel(currentRectangle);
-    app.stage.addChild(currentRectangle);
+    mainContainer.addChild(currentRectangle);
     // make it hoverable
     currentRectangle.interactive = true;
     currentRectangle
@@ -261,7 +262,8 @@ function createExistingRect(createCoord, color, name) {
         .on('pointerout', onRectangleOut);
     // remove it from current ceration and chose new color for next one
     addLabel(currentRectangle);
-    currentRectangle = null
+    console.log("currentRect", currentRectangle);
+    currentRectangle = null;
  
 }
 
@@ -285,7 +287,7 @@ function testRect() {
     currentRectangle.name = "0xFFFF00";
     currentRectangle.position.copyFrom(new PIXI.Point(100, 100))
     addLabel(currentRectangle);
-    app.stage.addChild(currentRectangle)
+    mainContainer.addChild(currentRectangle)
     // make it hoverable
     currentRectangle.interactive = true;
     addLabel(currentRectangle);
@@ -296,7 +298,7 @@ function testRect() {
 }
 //testRect()
 
-app.stage.on('pointerdown', (e) => {
+mainContainer.on('pointerdown', (e) => {
     // Initiate rect creation
     console.log(inputMode)
     if (inputMode == InputModeEnum.create) {
@@ -309,7 +311,7 @@ if (inputMode == InputModeEnum.select) {
 }
 });
 
-app.stage.on('pointermove', (e) => {
+mainContainer.on('pointermove', (e) => {
     // Do this routine only if in create mode and have started creation
     // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
     if (inputMode == InputModeEnum.create && startPosition) {
@@ -335,13 +337,13 @@ app.stage.on('pointermove', (e) => {
                 currentRectangle.name = "";
                 currentRectangle.position.copyFrom(start)
                 addLabel(currentRectangle);
-                app.stage.addChild(currentRectangle)
+                mainContainer.addChild(currentRectangle)
             } else {
                 scaleRectB(currentRectangle, currentPosition)
             }
         } else {
             if (currentRectangle) {
-                app.stage.removeChild(currentRectangle);
+                mainContainer.removeChild(currentRectangle);
                 currentRectangle = null
             }
         }
@@ -349,7 +351,7 @@ app.stage.on('pointermove', (e) => {
     }
 });
 
-app.stage.on('pointerup', (e) => {
+mainContainer.on('pointerup', (e) => {
     // Wrap up rect creation
     startPosition = null
     if (currentRectangle && currentRectangle.interactive == false) {
@@ -407,7 +409,7 @@ function onRectangleOver() {
             edit: this,
             mode: InputModeEnum.move
         });
-    app.stage.addChild(buttonMove);
+    mainContainer.addChild(buttonMove);
     // add to control queue
     controls.push(buttonMove);
 
@@ -428,7 +430,7 @@ function onRectangleOver() {
             mode: InputModeEnum.scale
         });
 
-    app.stage.addChild(buttonScale);
+    mainContainer.addChild(buttonScale);
     controls.push(buttonScale);
 }
 
@@ -447,7 +449,7 @@ function removeIfUnused(control) {
         // if we are draging controll and went out of it
         // we dont remove it because it is still used
         if (!control.isOver && control !== dragController) {
-            app.stage.removeChild(control);
+            mainContainer.removeChild(control);
             cleanupcontrols()
         }
     }, 0)
@@ -469,7 +471,7 @@ function getStartAndSize(pointA, pointB) {
     let startX = deltaX > 0 ? pointA.x : pointB.x
     let startY = deltaY > 0 ? pointA.y : pointB.y
     return {
-        start: new PIXI.Point(startX, startY),
+        start: new PIXI.Point(startX  - mainContainer.position.x, startY - mainContainer.position.y),
         size: new PIXI.Point(absDeltaX, absDeltaY)
     }
 }
@@ -527,7 +529,7 @@ function moveRect(resizeRectange, dragController) {
     dragController.position.copyFrom(startPositionController)
 }
 function selectRect (rectangle){
-    rectangle.isSelected = true;
+    //rectangle.isSelected = true;
 }
 
 function onDragMoveNew(event) {
@@ -553,14 +555,14 @@ function onDragStartNew() {
     currentRectangle = this.edit
     startPosition = new PIXI.Point().copyFrom(this.edit.position)
     inputMode = this.mode
-    app.stage.on('pointermove', onDragMoveNew);
+    mainContainer.on('pointermove', onDragMoveNew);
 }
 
 function onDragEndNew() {
     // stop drag, remove parameters
     // return input mode to default
     if (dragController) {
-        app.stage.off('pointermove', onDragMoveNew);
+        mainContainer.off('pointermove', onDragMoveNew);
         dragController.alpha = 1;
         currentRectangle = null;
         dragController = null;
@@ -569,7 +571,7 @@ function onDragEndNew() {
     inputMode = InputModeEnum.create;
 }
 
-app.stage.on('pointerupoutside', onDragEndNew);
+mainContainer.on('pointerupoutside', onDragEndNew);
 
 console.log("reload")
 
@@ -590,4 +592,3 @@ function bringToFront(sprite) {
     }
 }
 //load our data
-loadData ? loadDAS(DAS) : null;

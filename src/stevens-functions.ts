@@ -172,8 +172,12 @@ function handleResize(
   mainContainer.children.forEach((child) => {
     let childIntialScale = child.intialScale;
     let childIntialPosition = child.position.x;
+    console.log(`childIntialScale: ${childIntialScale}`);
+    console.log(`intialScale: ${intialScale}`);
+    console.log(`childScale`, child.scale.x);
 
     let newScale = intialScale / childIntialScale;
+    console.log(`newScale: ${newScale}, childName: ${child.name}`);
     let startingWidth = webpageSprite.width;
 
     if (child.name === `webpage`) {

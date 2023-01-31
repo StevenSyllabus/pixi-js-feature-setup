@@ -21,16 +21,16 @@ export function onDragStart(e, rectangle, rectangles) {
   logDrag
     ? console.log("myRectanglePosition", rectangle.myRectanglePosition)
     : null;
- 
-    rectangle.draggingOffset = [
-      mousePosition.x - rectangle.myRectanglePosition[0],
-      mousePosition.y - rectangle.myRectanglePosition[1],
-    ];
 
+  rectangle.draggingOffset = [
+    mousePosition.x - rectangle.myRectanglePosition[0],
+    mousePosition.y - rectangle.myRectanglePosition[1],
+  ];
 }
 
 export function onDragEnd(e, rectangle, rectangles) {
   //rectangle.selected = false;
+
   changeRectColor(rectangle, rectangle.oldColor);
   rectangles.forEach((r) => (r.dragging = false));
   rectangles.forEach((r) => (r.interactive = false));
@@ -42,17 +42,20 @@ export function onDragEnd(e, rectangle, rectangles) {
         rectangle.selected
       )
     : null;
-    rectangle.off("pointermove");
+  rectangle.off("pointermove");
 }
 
 export function onDragMove(e, rectangle, rectangles) {
   //if (rectangle.dragging != true) return;
   if (rectangle.dragging) {
-  rectangle.position.x += e.data.originalEvent.movementX;
-  rectangle.position.y += e.data.originalEvent.movementY;
-  logDrag ? console.log("onDragMove") : null;
-  changeRectColor(rectangle, rectangle.labelColor);
-}
+    rectangle.position.x += e.data.originalEvent.movementX;
+    rectangle.position.y += e.data.originalEvent.movementY;
+    rectangle.lastMoveX = rectangle.position.x;
+    rectangle.lastMoveY = rectangle.position.y;
+
+    logDrag ? console.log("onDragMove") : null;
+    changeRectColor(rectangle, rectangle.labelColor);
+  }
 }
 export function changeRectColor(sq, color) {
   logDrag ? console.log("changeColor") : null;
@@ -90,10 +93,7 @@ export function getStartCoordinates(startX, startY, endX, endY) {
   return { startRectX, startRectY, width, height };
 }
 
-export function addDragHand(
-  rectangle,
-  rectangles
-) {
+export function addDragHand(rectangle, rectangles) {
   const png = PIXI.Texture.from(
     `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
   );
@@ -106,8 +106,7 @@ export function addDragHand(
     rectangle.myRectanglePosition[0] +
       rectangle.myRectanglePosition[2] +
       handlePosAdjustX,
-    rectangle.myRectanglePosition[1] +
-      handlePosAdjustY
+    rectangle.myRectanglePosition[1] + handlePosAdjustY
   );
   //console.log("rectBounds",(rectangle.myRectanglePosition[0] + rectangle.myRectanglePosition[2] - handlePosAdjustX), (rectangle.myRectanglePosition[1] + rectangle.myRectanglePosition[3] - handlePosAdjustY));
   const hitArea = new PIXI.Rectangle(0, 0, 64 * scaleHandle, 64 * scaleHandle);
@@ -119,15 +118,23 @@ export function addDragHand(
   rectangle.addChild(handle);
 }
 
-export function handleResizerRect (e, rectangle, mainContainer, rectangles, webpageSprite) {
-    logResize ? console.log('handle-resizer', rectangle, rectangle.resizing) : null;
-    if (isResizing) {
-     // Clear the stage
-     mainContainer.removeChildren();
-     const rect = new PIXI.Graphics();
-     rect.name = rectangle.name;
-     removeRectangle(rectangle, rectangles);
-     rectangle.clear();
+export function handleResizerRect(
+  e,
+  rectangle,
+  mainContainer,
+  rectangles,
+  webpageSprite
+) {
+  logResize
+    ? console.log("handle-resizer", rectangle, rectangle.resizing)
+    : null;
+  if (isResizing) {
+    // Clear the stage
+    mainContainer.removeChildren();
+    const rect = new PIXI.Graphics();
+    rect.name = rectangle.name;
+    removeRectangle(rectangle, rectangles);
+    rectangle.clear();
 
     // Add the image back to the stage
     mainContainer.addChild(webpageSprite);
@@ -162,13 +169,19 @@ export function handleResizerRect (e, rectangle, mainContainer, rectangles, webp
     rectangles.forEach((r) => mainContainer.addChild(r));
   }
 }
-export function handleResizerRect2 (e, rectangle, mainContainer, rectangles, webpageSprite) {
+export function handleResizerRect2(
+  e,
+  rectangle,
+  mainContainer,
+  rectangles,
+  webpageSprite
+) {
   var initialMousePosX = rectangle.myRectanglePosition[0];
   var initialMousePosY = rectangle.myRectanglePosition[1];
-  var currentMousePosY,currentMousePosX;
-var initialRectWidth = rectangle.width;
-var initialRectHeight = rectangle.height;
-var currentMousePosX = e.data.global.x;
+  var currentMousePosY, currentMousePosX;
+  var initialRectWidth = rectangle.width;
+  var initialRectHeight = rectangle.height;
+  var currentMousePosX = e.data.global.x;
   var currentMousePosY = e.data.global.y;
   var deltaX = currentMousePosX - initialMousePosX;
   var deltaY = currentMousePosY - initialMousePosY;

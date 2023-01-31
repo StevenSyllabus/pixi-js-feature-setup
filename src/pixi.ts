@@ -113,23 +113,24 @@ const screenshot = PIXI.Texture.fromURL(
     console.log(texture);
     texture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
 
-    webpageSprite = PIXI.Sprite.from(texture);
-    console.log(`finished the sprite`);
-    console.log(webpageSprite);
-    intialWebpageWidth = webpageSprite.width;
-    intialWebpageHeight = webpageSprite.height;
-    webpageSprite.intialWidth = webpageSprite.width;
-    mainContainer.addChild(webpageSprite);
-    mainContainer.interactive = true;
+  webpageSprite = PIXI.Sprite.from(texture);
+  console.log(`finished the sprite`);
+  console.log(webpageSprite);
+  intialWebpageWidth = webpageSprite.width;
+  intialWebpageHeight = webpageSprite.height;
+  webpageSprite.intialWidth = webpageSprite.width;
+  mainContainer.addChild(webpageSprite);
+  mainContainer.interactive = true;
+  webpageSprite.name = `webpage`;
 
     webpageSprite.scale.set(app.view.width / webpageSprite.width);
 
-    intialCanvasWidth = app.view.width;
-    intialCanvasHeight = app.view.height;
-    intialScale = intialCanvasWidth / intialWebpageWidth;
-    webpageSprite.intialScale = app.view.width / webpageSprite.width;
-    scrollBar < PIXI.Graphics > = createScrollBar(mainContainer, app, ele);
-    loadData ? loadDAS(DAS) : null;
+  intialCanvasWidth = app.view.width;
+  intialCanvasHeight = app.view.height;
+  intialScale = intialCanvasWidth / intialWebpageWidth;
+  webpageSprite.intialScale = app.view.width / webpageSprite.width;
+  scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
+  loadData ? loadDAS(DAS) : null;
 });
 
 app.renderer.on(`resize`, function(event) {

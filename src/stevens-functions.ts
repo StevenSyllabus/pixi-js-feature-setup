@@ -61,7 +61,6 @@ function createScrollBar(
           pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
         const scrollbarY =
           scrollPercent * (pixiApp.view.height - scrollbarHeight);
-        //this mousedif is way wrong. It should be the difference between the mouse's y position and the scrollbar's y position
 
         const mouseDif = e.y - scrollbar.lastMouseY;
         console.log(mouseDif);
@@ -140,6 +139,8 @@ function updateScrollBarPosition(
   scrollbar.maxScroll = mainContainer.height - pixiApp.view.height;
 
   const scrollPercent = -mainContainer.position.y / scrollbar.maxScroll;
+  scrollbar.scrollPercent = scrollPercent;
+  console.log(`scrollPercent: ${scrollPercent}`);
   const scrollbarHeight =
     pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
   const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
@@ -148,11 +149,14 @@ function updateScrollBarPosition(
   scrollbar.drawRect(pixiApp.view.width - 14, scrollbarY, 14, scrollbarHeight);
   scrollbar.endFill();
   //clamp the container's position so that it can't scroll past the max scroll value
-
-  mainContainer.position.y = Math.min(
-    mainContainer.position.y,
-    scrollbar.maxScroll
-  );
+  if (mainContainer.position.y <= mainContainer.height) {
+    console.log(`clamp`);
+    mainContainer.position.y = Math.max(
+      mainContainer.position.y,
+      -scrollbar.maxScroll
+    );
+    mainContainer.position.y = Math.min(mainContainer.position.y, 0);
+  }
 }
 
 function handleResize(
@@ -162,19 +166,32 @@ function handleResize(
   webpageSprite: PIXI.Sprite,
   intialWebpageWidth: number
 ) {
-  console.log(`resize`);
   let intialScale = pixiApp.view.width / intialWebpageWidth;
+  let endingWidth, newPercent;
 
   mainContainer.children.forEach((child) => {
     let childIntialScale = child.intialScale;
+    let childIntialPosition = child.position.x;
+
     let newScale = intialScale / childIntialScale;
-    console.log(`newScale: ${newScale}`);
-    console.log(`intialScale: ${intialScale}`);
-    console.log(`child.intialScale: ${childIntialScale}`);
-    child.scale.set(newScale);
+    let startingWidth = webpageSprite.width;
+
+    if (child.name === `webpage`) {
+      child.scale.set(newScale);
+      endingWidth = webpageSprite.width;
+      newPercent = endingWidth / startingWidth;
+    } else if (child.lastMoveX || child.lastMoveY) {
+      child.scale.set(newScale);
+      if (newPercent !== 1) {
+        child.position.x = child.position.x * newPercent;
+        child.position.y = child.position.y * newPercent;
+      }
+      if (newPercent === 1) {
+      }
+    } else {
+      child.scale.set(newScale);
+    }
   });
-  //optional timeout to prevent the resize from firing too many times
-  //   clearTimeout(resizeTimeout);
 
   //   resizeTimeout = setTimeout(() => {
   //     console.log(`resize timeout`);

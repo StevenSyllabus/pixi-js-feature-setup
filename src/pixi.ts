@@ -307,7 +307,7 @@ mainContainer.on('pointerdown', (e) => {
 }
 if (inputMode == InputModeEnum.select) {
     //PLACEHOLDER for select function
-    selectRect(this);
+    selectRect(e.target);
 }
 });
 
@@ -320,7 +320,7 @@ mainContainer.on('pointermove', (e) => {
         let {
             start,
             size
-        } = getStartAndSize(currentPosition, startPosition)
+        } = getStartAndSize(currentPosition, startPosition, "draw")
         if (size.x > 5 && size.y > 5) {
             if (!currentRectangle) {
                 currentRectangle = new PIXI.Graphics()
@@ -463,26 +463,32 @@ function onRectangleOut() {
 }
 
 // Normalize start and size of square so we always have top left corner as start and size is always +
-function getStartAndSize(pointA, pointB) {
+function getStartAndSize(pointA, pointB, type) {
     let deltaX = pointB.x - pointA.x;
     let deltaY = pointB.y - pointA.y;
     let absDeltaX = Math.abs(deltaX)
     let absDeltaY = Math.abs(deltaY)
     let startX = deltaX > 0 ? pointA.x : pointB.x
     let startY = deltaY > 0 ? pointA.y : pointB.y
+    if (type == "scaleRect") {
     return {
-        start: new PIXI.Point(startX  - mainContainer.position.x, startY - mainContainer.position.y),
+        start: new PIXI.Point(startX, startY),
         size: new PIXI.Point(absDeltaX, absDeltaY)
+    }} else if (type == "draw") {    return {
+        start: new PIXI.Point(startX - mainContainer.position.x, startY - mainContainer.position.y),
+        size: new PIXI.Point(absDeltaX, absDeltaY)
+    }
+        
     }
 }
 
 //these two are slightly different, could probably be combined
 function scaleRect(resizeRectange, dragController) {
-    //currentPosition){
+    //currentPosition)
     let {
         start,
         size
-    } = getStartAndSize(startPosition, dragController.position)
+    } = getStartAndSize(startPosition, dragController.position, "scaleRect")
     if (size.x < 20 || size.y < 20) return
     // When we scale rect we have to give it new cordinates so we redraw it
     // in case of sprite we would do this a bit differently with scale property,
@@ -501,10 +507,12 @@ function scaleRect(resizeRectange, dragController) {
         .endFill()
 
     dragController.position.copyFrom(startPositionController)
+    console.log("scaleRect, startPos, startPosController,dragcontroller,mainContainer",startPosition,startPositionController,dragController.position,mainContainer.position);
 }
 
 function scaleRectB(resizeRectange, currentPosition) {
-    let {start,size} = getStartAndSize(startPosition, currentPosition)
+    let {start,size} = getStartAndSize(startPosition, currentPosition, "draw");
+    console.log("scaleRectB");
     if (size.x < 5 || size.y < 5) return
     // When we scale rect we have to give it new cordinates
     resizeRectange.clear()
@@ -528,8 +536,8 @@ function moveRect(resizeRectange, dragController) {
     resizeRectange.position.copyFrom(startPosition)
     dragController.position.copyFrom(startPositionController)
 }
-function selectRect (rectangle){
-    //rectangle.isSelected = true;
+function selectRect(rectangle){
+    alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
 }
 
 function onDragMoveNew(event) {

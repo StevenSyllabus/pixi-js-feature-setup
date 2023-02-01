@@ -289,6 +289,7 @@ mainContainer.on("pointerdown", (e) => {
   console.log(inputMode);
   if (inputMode == InputModeEnum.create) {
     startPosition = new PIXI.Point().copyFrom(e.global);
+
     logging ? console.log("pointerdown", startPosition) : null;
   }
   if (inputMode == InputModeEnum.select) {
@@ -463,10 +464,18 @@ function getStartAndSize(pointA, pointB, type) {
   let absDeltaY = Math.abs(deltaY);
   let startX = deltaX > 0 ? pointA.x : pointB.x;
   let startY = deltaY > 0 ? pointA.y : pointB.y;
+
+  //when the rectangle gets scaled, I need to factor that into the size of the rectangle
+  //When the page gets bigger, I need the rectangle to get drawn smaller,
+  //so I need to factor in the scale of the rectangle
+  //i know the rectangles scale ratio. I can get it with currentRectangle.scale
+
   if (type == "scaleRect") {
+    let currentScaleRatio = currentRectangle.scale.x;
+    let scaleRatio = 1 / currentScaleRatio;
     return {
       start: new PIXI.Point(startX, startY),
-      size: new PIXI.Point(absDeltaX, absDeltaY),
+      size: new PIXI.Point(absDeltaX * scaleRatio, absDeltaY * scaleRatio),
     };
   } else if (type == "draw") {
     return {

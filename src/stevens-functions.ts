@@ -174,22 +174,21 @@ function handleResize(
     let childIntialPosition = child.position.x;
 
     let newScale = intialScale / childIntialScale;
+    console.log(
+      `initialScale: ${intialScale}, childIntialScale: ${childIntialScale}`
+    );
+    console.log(`newScale: ${newScale}, childName: ${child.name}`);
     let startingWidth = webpageSprite.width;
 
     if (child.name === `webpage`) {
       child.scale.set(newScale);
       endingWidth = webpageSprite.width;
       newPercent = endingWidth / startingWidth;
-    } else if (child.lastMoveX || child.lastMoveY) {
-      child.scale.set(newScale);
-      if (newPercent !== 1) {
-        child.position.x = child.position.x * newPercent;
-        child.position.y = child.position.y * newPercent;
-      }
-      if (newPercent === 1) {
-      }
     } else {
+      console.log(`newScale`, newScale);
       child.scale.set(newScale);
+      child.position.x = childIntialPosition * newPercent;
+      child.position.y = child.position.y * newPercent;
     }
   });
 

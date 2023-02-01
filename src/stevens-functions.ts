@@ -1,7 +1,7 @@
 //@ts-nocheck
 import * as PIXI from "pixi.js";
 
-function createScrollBar(
+const createScrollBar = function (
   mainContainer: PIXI.Container,
   pixiApp: PIXI.Application,
   div: HTMLDivElement
@@ -130,8 +130,8 @@ function createScrollBar(
     }, 100);
   }
   return scrollbar;
-}
-function updateScrollBarPosition(
+};
+const updateScrollBarPosition = function (
   mainContainer: PIXI.Container,
   pixiApp: PIXI.Application,
   scrollbar: PIXI.Graphics
@@ -157,9 +157,9 @@ function updateScrollBarPosition(
     );
     mainContainer.position.y = Math.min(mainContainer.position.y, 0);
   }
-}
+};
 
-function handleResize(
+const handleResize = function (
   event: Event,
   pixiApp: PIXI.Application,
   mainContainer: PIXI.Container,
@@ -196,5 +196,5 @@ function handleResize(
   //     console.log(`resize timeout`);
   //     console.log(pixiApp.view.width / webpageSprite.intialWidth);
   //   }, 100);
-}
+};
 export { createScrollBar, updateScrollBarPosition, handleResize };

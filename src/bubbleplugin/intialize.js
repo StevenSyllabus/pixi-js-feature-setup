@@ -9,6 +9,12 @@ function(instance, context) {
     instance.data.loadData = true;
     instance.data.logEvents = false;
     instance.data.randomElementID = `pixi-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
+    instance.data.webpageScreenshot;
+    instance.data.labelFont;
+    instance.data.labelFontSize;
+    instance.data.labelFontColor;
+    instance.data.dasOrigin;
+
 
 
     instance.data.rectangles = [];
@@ -164,6 +170,7 @@ function(instance, context) {
 
         function scrollCanvas(event) {
             document.body.style.overflow = "hidden";
+
             // Update the container's y position based on the mouse wheel delta
             mainContainer.position.y -= event.deltaY;
 
@@ -196,7 +203,7 @@ function(instance, context) {
             scrollingTimeout = setTimeout(() => {
                 console.log("Show the content again because the user stopped scrolling");
                 document.body.style.overflow = "auto";
-            }, 100);
+            }, 1000);
         }
         return scrollbar;
     };
@@ -473,25 +480,41 @@ function(instance, context) {
     //loads & reformats Drawn Attribute Snippets
     instance.data.loadDAS = function (das) {
         das.forEach((das, index) => {
-            //var rect = Object.values(das);
-            //console.log(rect);
-            //will need placeholder for color. may need to generate specific
-            let createCoord = instance.data.getStartCoordinates(
-                das["X Coordinate (960)"],
-                das["Y Coordinate (960)"],
-                das["Box Width 250"] * 3,
-                das["Box Height 250"] * 3
-            );
-            instance.data.logging ? console.log("createCoord", createCoord) : null;
 
+            let startRectX = das.get('x_coordinate_number');
+            let startRectY = das.get('y_coordinate_number');
+            let width = das.get('box_width_number');
+            let height = das.get('box_height_number');
+            let intialScale = das.get('initial_scale_number');
+
+
+            console.log(`the original das is X`, das.get('x_coordinate_number'));
+            console.log(`the original das is Y`, das.get('y_coordinate_number'));
+            console.log(`the original das is width`, das.get('box_width_number'));
+            console.log(`the original das is heigh`, das.get('box_height_number'));
+            console.log(`the original das is "initial_drawn_scale_number"`, das.get('"initial_drawn_scale_number"'));
+
+
+            //console.log("DAS",das.x_coordinate__960__number"], das["y_coordinate__960__number"], das[
+            //    "box_height_number"] * 3, das["box_width_number"] * 3);
+            console.log("creating the das", das);
+            let createCoord = {
+                "startRectX": startRectX,
+                "startRectY": startRectY,
+                "width": width,
+                "height": height
+            }
+
+            console.log(`create the coord`, createCoord)
+            instance.data.logging ? console.log("createCoord", createCoord) : null;
             //stop small box creation - Placeholder
             if (createCoord.width < 20) return;
             if (createCoord.height < 20) return;
             console.log("att", att[0]);
-            instance.data.createExistingRect(createCoord, colors[index], att[index].Name);
-            //createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], colors[index], das['_id']);
+            instance.data.createExistingRect(createCoord, das.labelColor, das.attributeName, das.attributeId);
         });
-    };
+    }
+
 
     instance.data.addLabel = function (rect) {
         const label = new PIXI.Text(rect.name, {
@@ -514,7 +537,7 @@ function(instance, context) {
 
     instance.data.createExistingRect = function (createCoord, color, name) {
         // Create graphics
-
+        console.log("createCoord", createCoord);
         if (color == "") {
             color = highlightColor;
         }

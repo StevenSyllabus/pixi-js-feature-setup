@@ -485,24 +485,39 @@ function(instance, context) {
             let startRectY = das.get('y_coordinate_number');
             let width = das.get('box_width_number');
             let height = das.get('box_height_number');
-            let intialScale = das.get('initial_scale_number');
+            let intialScale = das.get('initial_drawn_scale_number');
+            let webpageCurrentScale = instance.data.webpageSprite.width / instance.data.intialWebpageWidth;
+
+            let currentScaleFactorWidth = width * webpageCurrentScale / intialScale;
+            let currentScaleFactorHeight = height * webpageCurrentScale / intialScale;
+
+            let currentScaleFactorX = startRectX * webpageCurrentScale / intialScale;
+            let currentScaleFactorY = startRectY * webpageCurrentScale / intialScale;
+
+            console.log(`the webpage test current scale factor`, webpageCurrentScale);
 
 
-            console.log(`the original das is X`, das.get('x_coordinate_number'));
-            console.log(`the original das is Y`, das.get('y_coordinate_number'));
+
+
+
             console.log(`the original das is width`, das.get('box_width_number'));
+            console.log(`the original das is height`, das.get('box_height_number'));
+            console.log(`the scaled factor width is`, currentScaleFactorWidth);
+            console.log(`the scaled factor height is`, currentScaleFactorHeight);
+
+
             console.log(`the original das is heigh`, das.get('box_height_number'));
-            console.log(`the original das is "initial_drawn_scale_number"`, das.get('"initial_drawn_scale_number"'));
+            console.log(`the original das is "initial_drawn_scale_number"`, das.get('initial_drawn_scale_number'));
 
 
             //console.log("DAS",das.x_coordinate__960__number"], das["y_coordinate__960__number"], das[
             //    "box_height_number"] * 3, das["box_width_number"] * 3);
             console.log("creating the das", das);
             let createCoord = {
-                "startRectX": startRectX,
-                "startRectY": startRectY,
-                "width": width,
-                "height": height
+                "startRectX": currentScaleFactorX,
+                "startRectY": currentScaleFactorY,
+                "width": currentScaleFactorWidth,
+                "height": currentScaleFactorHeight
             }
 
             console.log(`create the coord`, createCoord)

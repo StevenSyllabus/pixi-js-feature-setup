@@ -1,145 +1,64 @@
 function(instance, properties, context) {
     //properties.attributes
-
-    if (properties.attributes) { var labelNames = properties.attributes.get(0, properties.attributes.length()); }
-    if (properties.attribute_colors) { var labelColors = properties.attribute_colors.get(0, properties.attribute_colors.length()); }
-    var webpageScreenshot = properties.webpage_screenshot;
-    var labelFont = properties.font;
-    var labelFontSize = properties.font_size;
-    var labelFontColor = properties.labelFontColor;
-    if (properties.drawn_attribute_snippets) {
-        var DAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length());
-        DAS.forEach((das, index) => {
-            das.attributeName = attribute[index].name;
-            das.attributeId = attribute[index].uniqueid;
-            das.labelColor = attribute_colors[index];
+    //properties.attributes
+    /*
+    const keyListDAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length())[0];
+    const keyListAtt = properties.attributes.get(0, properties.attributes.length())[0];
+    console.log("das",keyListDAS.listProperties(),"att",keyListAtt.listProperties());
+DAS
+ ['account_webpage_custom_account_webpage', 'attribute_custom_attribute', 'box_height_number', 'box_width_number', 'corner_roundness_number', 'mobile_screenshot_custom_webpage_screenshot', 'offset_of_top__y__number', 'shape_id_text', 'shape_text', 'stroke_width_number', 'syllabus_box_side_number', 'syllabus_box_width_number', 'webpage_screenshot_custom_webpage_screenshot', 'x_coordinate__250__number', 'x_coordinate__960__number', 'x_coordinate_number', 'y_coordinate__250__number', 'y_coordinate__960__number', 'y_coordinate_number', 'Created By', 'Slug', 'Created Date', 'Modified Date', '_id']
+ATT
+['account_custom_zaccount', 'average_distance_from_top_number', 'color_option_attribute_colors', 'description_text', 'last_used_date', 'name_search_text', 'name_text', 'related_webpages_list_custom_account_webpage', 'volume_number', 'Created By', 'Slug', 'Created Date', 'Modified Date', '_id']
+    */
+    const keyListDAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length())[0]
+        .listProperties();
+    const keyListAtt = properties.attributes.get(0, properties.attributes.length())[0].listProperties();
+    console.log(keyListAtt, keyListDAS)
+    var labelsOrigin = properties.attributes.get(0, properties.attributes.length());
+    var labels = labelsOrigin;
+    //create a Json representation of your data input
+    /*
+    const labels = labelsOrigin.map(x => {
+    let obj = {}
+    keyListAtt.forEach(y => {
+        Object.assign(obj, {
+            y: x.get(y)
         })
-    } else {
-        ////testdata
-        var DAS = new Array(
-            {
-                "Corner Roundness": 5,
-                "Offset of top (y)": 395.96128953041926,
-                "Syllabus Canvas Width": 483.328125,
-                "Syllabus Canvas Height": 3623.03125,
-                "Shape ID": "shape_unique_id_849029",
-                "Modified Date": 1674151426823,
-                "Created Date": 1674151424836,
-                "Created By": "1648561974656x439262183960839300",
-                "Y Coordinate (500)": 395,
-                "X Coordinate (500)": 193,
-                "Mobile Screenshot": "1674151421044x594933091784470800",
-                "Box Width 250": 88,
-                "Box Height 250": 99,
-                Attribute: "1673375655977x752951405907542000",
-                "Account Webpage": "1648649408910x887794807113668500",
-                "Stroke Width": 2,
-                Shape: "Rectangle",
-                "X Coordinate (250)": 96,
-                "X Coordinate (960)": 370,
-                "Y Coordinate (250)": 197,
-                "Y Coordinate (960)": 758,
-                _id: "1674151425031x842236848750460900",
-            },
-            {
-                "Corner Roundness": 5,
-                "Offset of top (y)": 228,
-                "Desktop Screenshot": "1670451431357x388596123285430460",
-                "Syllabus Canvas Width": 483,
-                "Syllabus Canvas Height": 712,
-                "Shape ID": "shape_unique_id_134457",
-                "Modified Date": 1674151406774,
-                "Created Date": 1674151403247,
-                "Created By": "1648561974656x439262183960839300",
-                "Y Coordinate (500)": 228,
-                "X Coordinate (500)": 95,
-                "Box Width 250": 30,
-                "Box Height 250": 25,
-                Attribute: "1668510026384x892836158180425700",
-                "Account Webpage": "1648649408910x887794807113668500",
-                "Stroke Width": 2,
-                Shape: "Rectangle",
-                "X Coordinate (250)": 47,
-                "X Coordinate (960)": 182,
-                "Y Coordinate (250)": 114,
-                "Y Coordinate (960)": 437,
-                _id: "1674151403457x266515680396836860",
-            },
-            {
-                "Corner Roundness": 5,
-                "Offset of top (y)": 51,
-                "Desktop Screenshot": "1672862222970x520878899413092600",
-                "Syllabus Canvas Width": 485,
-                "Syllabus Canvas Height": 515,
-                "Shape ID": "shape_unique_id_819523",
-                "Modified Date": 1674062602996,
-                "Created Date": 1674062601183,
-                "Created By": "1664221186966x204293830276146340",
-                "Y Coordinate (500)": 51,
-                "X Coordinate (500)": 21,
-                "Box Width 250": 146,
-                "Box Height 250": 77.5,
-                Attribute: "1668800394117x917004865047887900",
-                "Account Webpage": "1667262889527x858621114244434700",
-                "Stroke Width": 2,
-                Shape: "Rectangle",
-                "X Coordinate (250)": 10,
-                "X Coordinate (960)": 40,
-                "Y Coordinate (250)": 25,
-                "Y Coordinate (960)": 97,
-                _id: "1674062600971x785814322671779800",
-            },
-            {
-                "Corner Roundness": 5,
-                "Offset of top (y)": 122,
-                "Desktop Screenshot": "1672867270966x627421898112095900",
-                "Syllabus Canvas Width": 945,
-                "Syllabus Canvas Height": 4000,
-                "Shape ID": "shape_unique_id_653347",
-                "Modified Date": 1674059224359,
-                "Created Date": 1674059222796,
-                "Created By": "1664221186966x204293830276146340",
-                "Y Coordinate (500)": 63,
-                "X Coordinate (500)": 29,
-                "Box Width 250": 30.729166666666668,
-                "Box Height 250": 13.541666666666668,
-                Attribute: "1668800394117x917004865047887900",
-                "Account Webpage": "1672867250672x906510004638974000",
-                "Stroke Width": 2,
-                Shape: "Rectangle",
-                "X Coordinate (250)": 14,
-                "X Coordinate (960)": 57,
-                "Y Coordinate (250)": 31,
-                "Y Coordinate (960)": 122,
-                _id: "1674059222456x786064976190898200",
-            },
-            {
-                "Corner Roundness": 5,
-                "Offset of top (y)": 32,
-                "Desktop Screenshot": "1672867270966x627421898112095900",
-                "Syllabus Canvas Width": 960,
-                "Syllabus Canvas Height": 4000,
-                "Shape ID": "shape_unique_id_884652",
-                "Modified Date": 1674046122447,
-                "Created Date": 1674046115188,
-                "Created By": "1667849232139x190159762978082900",
-                "Y Coordinate (500)": 16,
-                "X Coordinate (500)": 10,
-                "Box Width 250": 38.802083333333336,
-                "Box Height 250": 17.96875,
-                Attribute: "1668800394117x917004865047887900",
-                "Account Webpage": "1672867250672x906510004638974000",
-                "Stroke Width": 2,
-                Shape: "Rectangle",
-                "X Coordinate (250)": 5,
-                "X Coordinate (960)": 21,
-                "Y Coordinate (250)": 8,
-                "Y Coordinate (960)": 32,
-                _id: "1674046114484x384901095148486660",
-            }
-        );
+    })
+    return obj
+    })
+    */
+    if (properties.attribute_colors) {
+        var labelColors = properties.attribute_colors.get(0, properties.attribute_colors.length());
     }
+    instance.data.webpageScreenshot = properties.webpage_screenshot;
+    instance.data.labelFont = properties.font;
+    instance.data.labelFontSize = properties.font_size;
+    instance.data.labelFontColor = properties.labelFontColor.slice(1);
+    instance.data.dasOrigin = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length());
+    var DAS = instance.data.dasOrigin;
 
+    /*
+    var DAS = dasOrigin.map(x => {
+        let obj = {}
+        keyListDAS.forEach(y => {
+            Object.assign(obj, {
+                y: x.get(y)
+            })
+        })
+        return obj
+    })
+    */
+    DAS.forEach((das, index) => {
+        if (labels[index] && labelColors[index]) {
+            das.attributeName = labels[index].get('name_text');
+            das.attributeId = labels[index].get('_id');
+            das.labelColor = labelColors[index].slice(1);
+        }
+    });
+
+
+    console.log("dasONLoad", DAS[0]);
     //var att = properties.att
     var att = new Array(
         {
@@ -292,9 +211,10 @@ function(instance, properties, context) {
         canvasElement = mainContainer;
 
     }
-    if (instance.data.addedScreenshot === false) {
+    if (instance.data.addedScreenshot === false && properties.webpage_screenshot) {
+        console.log(`the properties screenshot is`, properties.webpage_screenshot)
         screenshot = PIXI.Texture.fromURL(
-            `${imgixBaseURL}/https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${1000}`
+            `${imgixBaseURL}/${properties.webpage_screenshot}?w=${1000}`
         ).then((texture) => {
             console.log(`finished the texture`);
             console.log(texture);
@@ -378,6 +298,23 @@ function(instance, properties, context) {
                     instance.data.currentRectangle.initialScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
 
                     console.log(`the current rect`, instance.data.currentRectangle)
+
+                    let rectData = [
+                        instance.data.currentRectangle.x.toString(),
+                        instance.data.currentRectangle.y.toString(),
+                        instance.data.currentRectangle.width.toString(),
+                        instance.data.currentRectangle.height.toString(),
+                        instance.data.currentRectangle.name,
+                        instance.data.currentRectangle.labelColor.toString(),
+                        instance.data.currentRectangle.oldColor.toString(),
+                        instance.data.currentRectangle.initialScale.toString()
+                    ]
+                    console.log(`the rect data`, rectData)
+                    instance.publishState(`recently_created_drawing_data`, rectData)
+                    setTimeout(() => {
+                        instance.triggerEvent(`drawn_label_created`)
+
+                    }, 200)
 
                 }
                 instance.data.currentRectangle = null

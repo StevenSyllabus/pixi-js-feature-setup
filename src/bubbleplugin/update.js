@@ -10,6 +10,7 @@ DAS
 ATT
 ['account_custom_zaccount', 'average_distance_from_top_number', 'color_option_attribute_colors', 'description_text', 'last_used_date', 'name_search_text', 'name_text', 'related_webpages_list_custom_account_webpage', 'volume_number', 'Created By', 'Slug', 'Created Date', 'Modified Date', '_id']
     */
+    console.log(properties.attributes, properties.drawn_attribute_snippets)
     const keyListDAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length())[0]
         .listProperties();
     const keyListAtt = properties.attributes.get(0, properties.attributes.length())[0].listProperties();
@@ -309,12 +310,42 @@ ATT
                         instance.data.currentRectangle.oldColor.toString(),
                         instance.data.currentRectangle.initialScale.toString()
                     ]
-                    console.log(`the rect data`, rectData)
-                    instance.publishState(`recently_created_drawing_data`, rectData)
-                    setTimeout(() => {
-                        instance.triggerEvent(`drawn_label_created`)
+                    console.log(`Creating the rect data`, rectData);
+                    //create the data directly via the API
+                    let headersList = {
+                        "Accept": "*/*",
+                    }
 
-                    }, 200)
+                    let bodyContent = new FormData();
+                    bodyContent.append("x", rectData[0]);
+                    bodyContent.append("y", rectData[1]);
+                    bodyContent.append("width", rectData[2]);
+                    bodyContent.append("height", rectData[3]);
+                    bodyContent.append("initial_drawn_scale", rectData[7]);
+                    bodyContent.append("account_webpage", properties.account_webpage);
+
+                    fetch("https://app.syllabus.io/version-steven-canvas-implementat/api/1.1/wf/create-new-drawn-label", {
+                        method: "POST",
+                        body: bodyContent,
+                        headers: headersList
+                    }).then(response => response.json())
+                        .then(result => {
+                            let newID = result.response.drawn_attribute_snippet._id;
+                            console.log(`the new id`, newID);
+                            console.log(result.response);
+                            console.log(result.response.drawn_attribute_snippet);
+                            console.log(result.response.drawn_attribute_snippet._id);
+
+                            instance.publishState(`recently_created_drawing_data`, rectData)
+                            instance.publishState(`recently_created_drawn_label`, newID)
+                            setTimeout(() => {
+                                instance.triggerEvent(`drawn_label_created`)
+
+                            }, 200)
+
+                        })
+
+
 
                 }
                 instance.data.currentRectangle = null

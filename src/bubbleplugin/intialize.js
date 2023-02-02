@@ -65,6 +65,7 @@ function(instance, context) {
     instance.data.dragController = null;
     // Active shown controls (can be shown both or one hovered / active)
     instance.data.controls = [];
+    instance.data.scalingRectTimeout;
 
     //end C Declare
 
@@ -520,6 +521,16 @@ function(instance, context) {
                 "height": currentScaleFactorHeight
             }
 
+
+
+
+
+
+
+
+
+
+
             console.log(`create the coord`, createCoord)
             instance.data.logging ? console.log("createCoord", createCoord) : null;
             //stop small box creation - Placeholder
@@ -779,6 +790,40 @@ function(instance, context) {
             .endFill();
 
         dragController.position.copyFrom(startPositionController);
+        clearTimeout(instance.data.resizeTimeout);
+        instance.data.resizeTimeout = setTimeout(() => {
+            console.log(`finished resizing`);
+            console.log(`resizeRectange`, resizeRectange);
+            console.log(`resizeRectange.position`, resizeRectange.position.x);
+            console.log(`resizeRectange.width`, resizeRectange.width);
+            console.log(`resizeRectange.height`, resizeRectange.height);
+            console.log(`resizeRectange.scale`, resizeRectange.scale);
+
+            //update the shape in the database
+            // let headersList = {
+            //     "Accept": "*/*",
+            // }
+
+            // let bodyContent = new FormData();
+            // bodyContent.append("x", resizeRectange.position.x);
+            // bodyContent.append("y", resizeRectange.position.y);
+            // bodyContent.append("width", resizeRectange.width);
+            // bodyContent.append("height", resizeRectange.height);
+            // bodyContent.append("drawn_label_snippet", `1675323839778x532947159105875200`);
+
+            // fetch("https://app.syllabus.io/version-steven-canvas-implementat/api/1.1/wf/update-drawn-label", {
+            //     method: "POST",
+            //     body: bodyContent,
+            //     headers: headersList
+            // }).then(response => response.json())
+            //     .then(result => {
+            //         let newID = result.response.drawn_attribute_snippet._id;
+            //         console.log(`the new id`, newID);
+            //         console.log(result.response);
+            //         console.log(result.response.drawn_attribute_snippet);
+            //         console.log(result.response.drawn_attribute_snippet._id);
+            //     })
+        }, 100);
         console.log(
             "scaleRect, startPos, startPosController,dragcontroller,mainContainer",
             instance.data.startPosition,
@@ -822,6 +867,7 @@ function(instance, context) {
         dragController.position.copyFrom(startPositionController);
     };
     instance.data.selectRect = function (rectangle) {
+        instance.publishState("currently_selected_drawing", rectangle.name)
         alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
     };
 

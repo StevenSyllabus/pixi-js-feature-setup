@@ -55,12 +55,13 @@ ATT
         console.log(`running das foreach`)
         console.log(`labels[index]`, labels[index])
         console.log(`labelColors[index]`, labelColors[index])
+        das.labelUniqueID = das.get('_id');
+        console.log(`the das uniqueID is`, das.labelUniqueID, `and the das attributeId is`, das.attributeId)
         if (labels[index] && labelColors[index]) {
             das.attributeName = labels[index].get('name_text');
             das.attributeId = labels[index].get('_id');
             das.labelColor = labelColors[index].slice(1);
-            das.labelUniqueID = das.get('_id');
-            console.log("das new", das);
+
         }
     });
 
@@ -391,6 +392,7 @@ ATT
             }
             console.log(`loadData?`, instance.data.loadData)
             instance.data.loadData ? instance.data.loadDAS(instance.data.dasOrigin) : null;
+            console.log(`the dasorigin is `, instance.data.dasOrigin)
             if (instance.data.createdScrollBar == false) {
                 instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
                 instance.data.createdScrollBar = true;

@@ -543,7 +543,7 @@ function(instance, context) {
             if (createCoord.width < 20) return;
             if (createCoord.height < 20) return;
             console.log("att", att[0]);
-            instance.data.createExistingRect(createCoord, das.labelColor, das.attributeName, das.attributeId);
+            instance.data.createExistingRect(createCoord, das.labelColor, das.attributeName, das.labelUniqueID);
         });
     }
 
@@ -567,7 +567,7 @@ function(instance, context) {
         label.position.set(10, 10);
     };
 
-    instance.data.createExistingRect = function (createCoord, color, name) {
+    instance.data.createExistingRect = function (createCoord, color, name, id) {
         // Create graphics
         console.log("createCoord", createCoord);
         if (color == "") {
@@ -588,6 +588,8 @@ function(instance, context) {
         instance.data.currentRectangle.labelColor = "0x" + color;
         instance.data.currentRectangle.oldColor = "0x" + color;
         instance.data.currentRectangle.name = name;
+        instance.data.currentRectangle.id = id;
+        console.log(`the current rect data for id`, instance.data.currentRectangle);
         // then we move it to final position
         instance.data.currentRectangle.position.copyFrom(
             new PIXI.Point(createCoord.startRectX, createCoord.startRectY)
@@ -873,8 +875,8 @@ function(instance, context) {
         dragController.position.copyFrom(startPositionController);
     };
     instance.data.selectRect = function (rectangle) {
-        instance.publishState("currently_selected_drawing", rectangle.name)
-        console.log(`selectRect, rectangle.name`, rectangle.name)
+        instance.publishState("currently_selected_drawing", rectangle.id)
+        console.log(`selectRect, rectangle data values`, rectangle.id)
 
     };
 

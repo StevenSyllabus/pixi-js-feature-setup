@@ -14,6 +14,8 @@ function(instance, context) {
     instance.data.labelFontSize;
     instance.data.labelFontColor;
     instance.data.dasOrigin;
+    instance.data.addedMainContainerEventListeners = false;
+
 
 
 
@@ -868,7 +870,8 @@ function(instance, context) {
     };
     instance.data.selectRect = function (rectangle) {
         instance.publishState("currently_selected_drawing", rectangle.name)
-        alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
+        console.log(`selectRect, rectangle.name`, rectangle.name)
+
     };
 
     instance.data.onDragMoveNew = function (event) {

@@ -224,7 +224,7 @@ ATT
             instance.data.handleResize(event, instance.data.app, instance.data.mainContainer, instance.data.webpageSprite, instance.data
                 .intialWebpageWidth);
             instance.data.updateScrollBarPosition(instance.data.mainContainer, instance.data.app, instance.data.scrollBar);
-            console.log(`the scrollbar is`,)
+            console.log(`the scrollbar is`, instance.data.scrollBar)
         });
         instance.data.mainContainer = new PIXI.Container();
         mainContainer.interactive = false;
@@ -391,7 +391,10 @@ ATT
             }
             console.log(`loadData?`, instance.data.loadData)
             instance.data.loadData ? instance.data.loadDAS(instance.data.dasOrigin) : null;
-            instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
+            if (instance.data.createdScrollBar == false) {
+                instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
+                instance.data.createdScrollBar = true;
+            }
 
             instance.data.addedScreenshot = true
         });

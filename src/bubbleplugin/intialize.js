@@ -15,6 +15,7 @@ function(instance, context) {
     instance.data.labelFontColor;
     instance.data.dasOrigin;
     instance.data.addedMainContainerEventListeners = false;
+    instance.data.createdScrollBar = false;
 
 
 
@@ -223,7 +224,10 @@ function(instance, context) {
         const scrollbarHeight =
             pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
         const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
-        scrollbar.clear();
+
+        if (scrollbar.clear) {
+            scrollbar.clear();
+        }
         scrollbar.beginFill(0x808080);
         scrollbar.drawRect(pixiApp.view.width - 14, scrollbarY, 14, scrollbarHeight);
         scrollbar.endFill();

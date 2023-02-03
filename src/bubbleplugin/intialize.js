@@ -17,6 +17,8 @@ function(instance, context) {
     instance.data.addedMainContainerEventListeners = false;
     instance.data.createdScrollBar = false;
     instance.data.originalWebsiteScreenshotURL;
+    instance.data.scrollingTimeout;
+
 
 
 
@@ -90,7 +92,6 @@ function(instance, context) {
         const scrollbar = new PIXI.Graphics();
         scrollbar.maxScroll = mainContainer.height - pixiApp.view.height;
 
-        let scrollingTimeout;
         scrollbar.interactive = true;
 
         scrollbar.beginFill(0x808080);
@@ -165,7 +166,9 @@ function(instance, context) {
             },
             { passive: true }
         );
-        div.addEventListener("wheel", scrollCanvas, { passive: true });
+
+
+
 
         pixiApp.stage.addChild(scrollbar);
 
@@ -173,45 +176,50 @@ function(instance, context) {
 
         //resize the container and scrollbar when the window is resized
 
-        function scrollCanvas(event) {
-            document.body.style.overflow = "hidden";
 
-            // Update the container's y position based on the mouse wheel delta
-            mainContainer.position.y -= event.deltaY;
-
-            // Clamp the container's position so that it can't scroll past the max scroll value
-            if (mainContainer.position.y <= mainContainer.height) {
-                mainContainer.position.y = Math.max(
-                    mainContainer.position.y,
-                    -scrollbar.maxScroll
-                );
-                mainContainer.position.y = Math.min(mainContainer.position.y, 0);
-            }
-
-            // Update the scrollbar position and size based on the container's scroll position
-            const scrollPercent = -mainContainer.position.y / scrollbar.maxScroll;
-            const scrollbarHeight =
-                pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
-            const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
-            if (scrollbar.clear) {
-                scrollbar.clear();
-            }
-            scrollbar.beginFill(0x808080);
-            scrollbar.drawRect(
-                pixiApp.view.width - scrollBarWidth,
-                scrollbarY,
-                scrollBarWidth,
-                scrollbarHeight
-            );
-            scrollbar.endFill();
-            clearTimeout(scrollingTimeout);
-            scrollingTimeout = setTimeout(() => {
-                console.log("Show the content again because the user stopped scrolling");
-                document.body.style.overflow = "auto";
-            }, 1000);
-        }
         return scrollbar;
     };
+    instance.data.scrollCanvas = function (event) {
+        document.body.style.overflow = "hidden";
+        let maxScroll = instance.data.mainContainer.height - instance.data.app.view.height;
+        console.log(`the scrollbar during creation is`, instance.data.scrollBar)
+
+
+
+        // Update the container's y position based on the mouse wheel delta
+        instance.data.mainContainer.position.y -= event.deltaY;
+
+        // Clamp the container's position so that it can't scroll past the max scroll value
+        if (instance.data.mainContainer.position.y <= instance.data.mainContainer.height) {
+            instance.data.mainContainer.position.y = Math.max(
+                instance.data.mainContainer.position.y,
+                -maxScroll
+            );
+            instance.data.mainContainer.position.y = Math.min(instance.data.mainContainer.position.y, 0);
+        }
+
+        // Update the scrollbar position and size based on the container's scroll position
+        const scrollPercent = -instance.data.mainContainer.position.y / maxScroll;
+        const scrollbarHeight =
+            instance.data.app.view.height * (instance.data.app.view.height / instance.data.mainContainer.height);
+        const scrollbarY = scrollPercent * (instance.data.app.view.height - scrollbarHeight);
+        if (instance.data.scrollBar?.clear) {
+            instance.data.scrollBar.clear();
+        }
+        instance.data.scrollBar.beginFill(0x808080);
+        instance.data.scrollBar.drawRect(
+            instance.data.app.view.width - 14,
+            scrollbarY,
+            14,
+            scrollbarHeight
+        );
+        instance.data.scrollBar.endFill();
+        clearTimeout(instance.data.scrollingTimeout);
+        instance.data.scrollingTimeout = setTimeout(() => {
+            console.log("Show the content again because the user stopped scrolling");
+            document.body.style.overflow = "auto";
+        }, 1000);
+    }
     instance.data.updateScrollBarPosition = function (
         mainContainer,
         pixiApp,

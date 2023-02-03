@@ -355,6 +355,15 @@ ATT
                                 instance.data.currentRectangle.oldColor.toString(),
                                 instance.data.currentRectangle.initialScale.toString()
                             ]
+
+
+                            //get the current versions url for updating the proper database
+                            let currentUrl = window.location.href;
+                            let urlArray = currentUrl.split('/');
+                            let secondSlash = urlArray[3];
+                            console.log(`secondSlash: ${secondSlash}`)
+
+
                             //create the data directly via the API
                             let headersList = {
                                 "Accept": "*/*",
@@ -368,7 +377,7 @@ ATT
                             bodyContent.append("initial_drawn_scale", rectData[7]);
                             bodyContent.append("account_webpage", properties.account_webpage);
 
-                            fetch("https://app.syllabus.io/version-steven-canvas-implementat/api/1.1/wf/create-new-drawn-label", {
+                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/create-new-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList

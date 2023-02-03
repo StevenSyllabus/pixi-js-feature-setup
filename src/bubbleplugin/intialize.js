@@ -33,6 +33,8 @@ function(instance, context) {
     instance.data.ele;
     instance.data.app = new PIXI.Application({
         resizeTo: instance.canvas,
+        backgroundColor: 0x000000,
+        backgroundAlpha: 0,
     });
 
     instance.data.canvasElement = instance.data.mainContainer;

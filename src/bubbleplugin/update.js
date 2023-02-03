@@ -207,8 +207,9 @@ ATT
                 instance.data.resizeTimer = setTimeout(() => {
                     console.log(`We just resized after timeout`, entry.contentRect);
                     instance.data.app.resize();
-
-                    instance.data.updateScrollBarPosition(instance.data.mainContainer, instance.data.app, instance.data.scrollBar);
+                    if (instance.data.scrollBar) {
+                        instance.data.updateScrollBarPosition(instance.data.mainContainer, instance.data.app, instance.data.scrollBar);
+                    }
                 }, 0);
                 console.log(`We just resized the observer`, entry.contentRect);
             }
@@ -400,13 +401,10 @@ ATT
                     instance.data.addedMainContainerEventListeners = true;
                 }
                 instance.data.loadData ? instance.data.loadDAS(instance.data.dasOrigin) : null;
-
-                if (typeof instance.data.scrollBar.destroy === "function") {
-                    instance.data.scrollBar.destroy();
+                if (instance.data.createdScrollBar == false) {
+                    instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
+                    instance.data.createdScrollBar = true;
                 }
-                instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
-                instance.data.createdScrollBar = true;
-
                 setTimeout(() => {
                     instance.data.app.resize();
                 }, 100)

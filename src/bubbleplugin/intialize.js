@@ -37,7 +37,7 @@ function(instance, context) {
         instance.data.intialCanvasHeight,
         instance.data.intialScale,
         instance.data.webpageSprite,
-        instance.data.scrollBar = {};
+        instance.data.scrollBar;
 
     instance.data.resizeTimeout = null;
     /////////////////////NEW DRAWING

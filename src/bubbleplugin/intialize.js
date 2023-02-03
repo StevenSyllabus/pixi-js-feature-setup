@@ -179,6 +179,37 @@ function(instance, context) {
 
         return scrollbar;
     };
+    instance.data.scrollBarWindowPointerMove = function (event) {
+        if (instance.data.ele.pressed) {
+            const scrollPercent = -instance.data.mainContainer.position.y / instance.data.scrollbar.maxScroll;
+            console.log(`scrollPercent: ${scrollPercent}`);
+
+            const scrollbarHeight =
+                instance.data.app.view.height * (instance.data.app.view.height / instance.data.mainContainer.height);
+            const scrollbarY =
+                scrollPercent * (instance.data.app.view.height - scrollbarHeight);
+
+            const mouseDif = event.y - instance.data.scrollbar.lastMouseY;
+            console.log(mouseDif);
+
+            const newTop = mouseDif + instance.data.scrollbar.lastTop;
+            const scrollPercent2 = newTop / (instance.data.app.view.height - scrollbarHeight);
+            const newScroll = Math.min(-scrollPercent2 * instance.data.scrollbar.maxScroll, 0);
+
+            if (scrollPercent2 > 0 && scrollPercent2 < 1) {
+                instance.data.mainContainer.position.y = newScroll;
+                instance.data.scrollbar.clear();
+                instance.data.scrollbar.beginFill(0x808080);
+                instance.data.scrollbar.drawRect(
+                    instance.data.app.view.width - 14,
+                    newTop,
+                    14,
+                    scrollbarHeight
+                );
+                instance.data.scrollbar.endFill();
+            }
+        }
+    };
     instance.data.scrollCanvas = function (event) {
         document.body.style.overflow = "hidden";
         let maxScroll = instance.data.mainContainer.height - instance.data.app.view.height;

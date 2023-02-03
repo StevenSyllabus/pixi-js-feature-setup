@@ -91,6 +91,13 @@ function(instance, context) {
         pixiApp,
         div
     ) {
+        const scrollPercent = -instance.data.mainContainer.position.y / instance.data.maxScroll;
+        console.log(`scrollPercent: ${scrollPercent}`);
+
+        const scrollbarHeight =
+            instance.data.app.view.height * (instance.data.app.view.height / instance.data.mainContainer.height);
+        const scrollbarY =
+            scrollPercent * (instance.data.app.view.height - scrollbarHeight);
 
 
         const scrollBarWidth = 14;
@@ -103,7 +110,7 @@ function(instance, context) {
         scrollbar.beginFill(0x808080);
         scrollbar.drawRect(
             pixiApp.view.width - scrollBarWidth,
-            0,
+            scrollbarY,
             scrollBarWidth,
             pixiApp.view.height * (pixiApp.view.height / mainContainer.height)
         );

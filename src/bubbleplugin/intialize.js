@@ -16,6 +16,7 @@ function(instance, context) {
     instance.data.dasOrigin;
     instance.data.addedMainContainerEventListeners = false;
     instance.data.createdScrollBar = false;
+    instance.data.originalWebsiteScreenshotURL;
 
 
 
@@ -876,6 +877,9 @@ function(instance, context) {
     };
     instance.data.selectRect = function (rectangle) {
         instance.publishState("currently_selected_drawing", rectangle.id)
+        setTimeout(() => {
+            instance.triggerEvent("label_selected")
+        }, 100)
         console.log(`selectRect, rectangle data values`, rectangle.id)
 
     };

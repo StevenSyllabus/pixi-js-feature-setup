@@ -192,6 +192,8 @@ ATT
                 instance.data.resizeTimer = setTimeout(() => {
                     console.log(`We just resized after timeout`, entry.contentRect);
                     instance.data.app.resize();
+
+                    instance.data.updateScrollBarPosition(instance.data.mainContainer, instance.data.app, instance.data.scrollBar);
                 }, 0);
                 console.log(`We just resized the observer`, entry.contentRect);
             }
@@ -220,12 +222,8 @@ ATT
         instance.data.app.renderer.on(`resize`, function (event) {
 
 
-            console.log(`the pixi renderer is:`, instance.data.app.renderer)
-            console.log(`the resizeto is`, instance.data.app.resizeTo)
-            instance.data.handleResize(event, instance.data.app, instance.data.mainContainer, instance.data.webpageSprite, instance.data
-                .intialWebpageWidth);
-            instance.data.updateScrollBarPosition(instance.data.mainContainer, instance.data.app, instance.data.scrollBar);
-            console.log(`the scrollbar is`, instance.data.scrollBar)
+
+
         });
         instance.data.mainContainer = new PIXI.Container();
         mainContainer.interactive = false;
@@ -242,23 +240,22 @@ ATT
 
     }
     if (properties.webpage_screenshot) {
-        console.log(`the properties screenshot is`, properties.webpage_screenshot)
+
         screenshot = PIXI.Texture.fromURL(
             `${imgixBaseURL}/${properties.webpage_screenshot}?w=${1000}`
         ).then((texture) => {
             mainContainer.removeChildren()
-            console.log(`finished the texture`);
-            console.log(texture);
+
             texture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
             instance.data.webpageSprite = PIXI.Sprite.from(texture);
             webpageSprite = instance.data.webpageSprite;
             instance.data.intialWebpageWidth = webpageSprite.width;
+            console.log("reset the intialwebpage width", instance.data.intialWebpageWidth)
             intialWebpageHeight = webpageSprite.height;
             webpageSprite.name = "webpage";
             webpageSprite.intialWidth = webpageSprite.width;
             mainContainer.addChild(webpageSprite);
             mainContainer.interactive = true;
-            console.log(`the main`, mainContainer)
             webpageSprite.scale.set(instance.data.app.view.width / webpageSprite.width);
             intialCanvasWidth = instance.data.app.view.width;
             intialCanvasHeight = instance.data.app.view.height;
@@ -269,7 +266,6 @@ ATT
             if (!instance.data.addedMainContainerEventListeners) {
                 mainContainer.on('pointerdown', (e) => {
                     // Initiate rect creation
-                    console.log(instance.data.inputMode)
                     if (instance.data.inputMode == instance.data.InputModeEnum.create) {
                         instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
                         instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
@@ -331,7 +327,7 @@ ATT
 
                         instance.data.currentRectangle.initialScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
 
-                        console.log(`the current rect`, instance.data.currentRectangle)
+
 
                         let rectData = [
                             instance.data.currentRectangle.x.toString(),
@@ -343,7 +339,6 @@ ATT
                             instance.data.currentRectangle.oldColor.toString(),
                             instance.data.currentRectangle.initialScale.toString()
                         ]
-                        console.log(`Creating the rect data`, rectData);
                         //create the data directly via the API
                         let headersList = {
                             "Accept": "*/*",
@@ -364,10 +359,9 @@ ATT
                         }).then(response => response.json())
                             .then(result => {
                                 let newID = result.response.drawn_attribute_snippet._id;
-                                console.log(`the new id`, newID);
-                                console.log(result.response);
+
                                 console.log(result.response.drawn_attribute_snippet);
-                                console.log(result.response.drawn_attribute_snippet._id);
+
 
                                 instance.publishState(`recently_created_drawing_data`, rectData)
                                 instance.publishState(`recently_created_drawn_label`, newID)

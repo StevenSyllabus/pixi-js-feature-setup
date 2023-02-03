@@ -18,6 +18,9 @@ function(instance, context) {
     instance.data.createdScrollBar = false;
     instance.data.originalWebsiteScreenshotURL;
     instance.data.scrollingTimeout;
+    instance.data.maxScroll;
+    instance.data.scrollBarLastY;
+    instance.data.scrollBarLastTop;
 
 
 
@@ -88,9 +91,12 @@ function(instance, context) {
         pixiApp,
         div
     ) {
+
+
         const scrollBarWidth = 14;
         const scrollbar = new PIXI.Graphics();
         scrollbar.maxScroll = mainContainer.height - pixiApp.view.height;
+        instance.data.maxScroll = mainContainer.height - pixiApp.view.height;
 
         scrollbar.interactive = true;
 
@@ -111,10 +117,10 @@ function(instance, context) {
             const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
             div.pressed = true;
             scrollbar.lastY = e.data.global.y;
-            scrollbar.lastMouseY = e.client.y;
+            instance.data.scrollBarLastY = e.client.y;
             console.log(e.client.y);
 
-            scrollbar.lastTop = scrollbarY;
+            instance.data.scrollBarLastTop = scrollbarY;
             scrollbar.tint = 0x808080;
         });
 
@@ -131,41 +137,6 @@ function(instance, context) {
             console.log(div.pressed);
             scrollbar.tint = 0xffffff;
         });
-        window.addEventListener(
-            "pointermove",
-            (e) => {
-                if (div.pressed) {
-                    const scrollPercent = -mainContainer.position.y / scrollbar.maxScroll;
-                    console.log(`scrollPercent: ${scrollPercent}`);
-
-                    const scrollbarHeight =
-                        pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
-                    const scrollbarY =
-                        scrollPercent * (pixiApp.view.height - scrollbarHeight);
-
-                    const mouseDif = e.y - scrollbar.lastMouseY;
-                    console.log(mouseDif);
-
-                    const newTop = mouseDif + scrollbar.lastTop;
-                    const scrollPercent2 = newTop / (pixiApp.view.height - scrollbarHeight);
-                    const newScroll = Math.min(-scrollPercent2 * scrollbar.maxScroll, 0);
-
-                    if (scrollPercent2 > 0 && scrollPercent2 < 1) {
-                        mainContainer.position.y = newScroll;
-                        scrollbar.clear();
-                        scrollbar.beginFill(0x808080);
-                        scrollbar.drawRect(
-                            pixiApp.view.width - 14,
-                            newTop,
-                            14,
-                            scrollbarHeight
-                        );
-                        scrollbar.endFill();
-                    }
-                }
-            },
-            { passive: true }
-        );
 
 
 
@@ -181,7 +152,7 @@ function(instance, context) {
     };
     instance.data.scrollBarWindowPointerMove = function (event) {
         if (instance.data.ele.pressed) {
-            const scrollPercent = -instance.data.mainContainer.position.y / instance.data.scrollbar.maxScroll;
+            const scrollPercent = -instance.data.mainContainer.position.y / instance.data.maxScroll;
             console.log(`scrollPercent: ${scrollPercent}`);
 
             const scrollbarHeight =
@@ -189,24 +160,24 @@ function(instance, context) {
             const scrollbarY =
                 scrollPercent * (instance.data.app.view.height - scrollbarHeight);
 
-            const mouseDif = event.y - instance.data.scrollbar.lastMouseY;
+            const mouseDif = event.y - instance.data.scrollBarLastY;
             console.log(mouseDif);
 
-            const newTop = mouseDif + instance.data.scrollbar.lastTop;
+            const newTop = mouseDif + instance.data.scrollBarLastTop;
             const scrollPercent2 = newTop / (instance.data.app.view.height - scrollbarHeight);
-            const newScroll = Math.min(-scrollPercent2 * instance.data.scrollbar.maxScroll, 0);
+            const newScroll = Math.min(-scrollPercent2 * instance.data.maxScroll, 0);
 
             if (scrollPercent2 > 0 && scrollPercent2 < 1) {
                 instance.data.mainContainer.position.y = newScroll;
-                instance.data.scrollbar.clear();
-                instance.data.scrollbar.beginFill(0x808080);
-                instance.data.scrollbar.drawRect(
+                instance.data.scrollBar.clear();
+                instance.data.scrollBar.beginFill(0x808080);
+                instance.data.scrollBar.drawRect(
                     instance.data.app.view.width - 14,
                     newTop,
                     14,
                     scrollbarHeight
                 );
-                instance.data.scrollbar.endFill();
+                instance.data.scrollBar.endFill();
             }
         }
     };

@@ -12,9 +12,9 @@ ATT
 ['account_custom_zaccount', 'average_distance_from_top_number', 'color_option_attribute_colors', 'description_text', 'last_used_date', 'name_search_text', 'name_text', 'related_webpages_list_custom_account_webpage', 'volume_number', 'Created By', 'Slug', 'Created Date', 'Modified Date', '_id']
     */
     console.log(properties.attributes, properties.drawn_attribute_snippets)
-    const keyListDAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length())[0]
-        .listProperties();
-    const keyListAtt = properties.attributes.get(0, properties.attributes.length())[0].listProperties();
+    console.log(`drawn attribute property`, properties.drawn_attribute_snippets)
+    const keyListDAS = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length())[0]?.listProperties();
+    const keyListAtt = properties.attributes.get(0, properties.attributes.length())[0]?.listProperties();
     console.log(keyListAtt, keyListDAS)
     var labelsOrigin = properties.attributes.get(0, properties.attributes.length());
     var labels = labelsOrigin;
@@ -407,6 +407,7 @@ ATT
                 instance.data.scrollBar = instance.data.createScrollBar(instance.data.mainContainer, instance.data.app, instance.data.ele);
                 instance.data.createdScrollBar = true;
                 instance.data.ele.addEventListener("wheel", instance.data.scrollCanvas, { passive: true })
+                window.addEventListener("pointermove", instance.data.scrollBarWindowPointerMove, { passive: true })
 
                 setTimeout(() => {
                     instance.data.app.resize();

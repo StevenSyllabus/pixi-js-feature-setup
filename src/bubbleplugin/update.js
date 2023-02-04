@@ -1,5 +1,7 @@
 function(instance, properties, context) {
     console.log("update is running", properties);
+    instance.data.accountWebPageID = properties.account_webpage;
+    console.log(`webpage2`, properties.account_webpage2.get(`_id`))
     //properties.attributes
     //properties.attributes
     /*
@@ -18,6 +20,8 @@ ATT
     console.log(keyListAtt, keyListDAS)
     var labelsOrigin = properties.attributes.get(0, properties.attributes.length());
     var labels = labelsOrigin;
+    console.log(`the account webpage we're passing is:`, properties.account_webpage)
+
     //create a Json representation of your data input
     /*
     const labels = labelsOrigin.map(x => {
@@ -368,14 +372,14 @@ ATT
                             let headersList = {
                                 "Accept": "*/*",
                             }
-
+                            console.log(`the account webpage we're passing is:`, instance.data.accountWebPageID)
                             let bodyContent = new FormData();
                             bodyContent.append("x", rectData[0]);
                             bodyContent.append("y", rectData[1]);
                             bodyContent.append("width", rectData[2]);
                             bodyContent.append("height", rectData[3]);
                             bodyContent.append("initial_drawn_scale", rectData[7]);
-                            bodyContent.append("account_webpage", properties.account_webpage);
+                            bodyContent.append("account_webpage", instance.data.accountWebPageID);
 
                             fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/create-new-drawn-label`, {
                                 method: "POST",

@@ -21,6 +21,7 @@ function(instance, context) {
     instance.data.maxScroll;
     instance.data.scrollBarLastY;
     instance.data.scrollBarLastTop;
+    instance.data.accountWebPageID;
 
 
 
@@ -189,6 +190,7 @@ function(instance, context) {
                 instance.data.scrollBar.endFill();
             }
         }
+        instance.publishState("scroll_depth", instance.data.mainContainer.position.y)
     };
     instance.data.scrollCanvas = function (event) {
         document.body.style.overflow = "hidden";
@@ -230,6 +232,7 @@ function(instance, context) {
             console.log("Show the content again because the user stopped scrolling");
             document.body.style.overflow = "auto";
         }, 1000);
+        instance.publishState("scroll_depth", instance.data.mainContainer.position.y)
     }
     instance.data.updateScrollBarPosition = function (
         mainContainer,

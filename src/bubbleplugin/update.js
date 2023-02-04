@@ -1,7 +1,6 @@
 function(instance, properties, context) {
     console.log("update is running", properties);
-    instance.data.accountWebPageID = properties.account_webpage;
-    console.log(`webpage2`, properties.account_webpage2.get(`_id`))
+    instance.data.accountWebPageID = properties.account_webpage?.get(`_id`);
     //properties.attributes
     //properties.attributes
     /*
@@ -20,7 +19,7 @@ ATT
     console.log(keyListAtt, keyListDAS)
     var labelsOrigin = properties.attributes.get(0, properties.attributes.length());
     var labels = labelsOrigin;
-    console.log(`the account webpage we're passing is:`, properties.account_webpage)
+
 
     //create a Json representation of your data input
     /*

@@ -6,9 +6,11 @@ let isDrawing = false;
 let isResizing = false;
 
 import * as PIXI from "pixi.js";
-export { logDrag, logResize, isResizing };
+{
+  logDrag, logResize, isResizing;
+}
 
-export function onDragStart(e, rectangle, rectangles) {
+const onDragStart = function (e, rectangle, rectangles) {
   const mousePosition = e.data.global;
   changeRectColor(rectangle, rectangle.labelColor);
   rectangle.interactive = true; // Make the rectangle interactive
@@ -26,9 +28,9 @@ export function onDragStart(e, rectangle, rectangles) {
     mousePosition.x - rectangle.myRectanglePosition[0],
     mousePosition.y - rectangle.myRectanglePosition[1],
   ];
-}
+};
 
-export function onDragEnd(e, rectangle, rectangles) {
+const onDragEnd = function (e, rectangle, rectangles) {
   //rectangle.selected = false;
 
   changeRectColor(rectangle, rectangle.oldColor);
@@ -43,9 +45,9 @@ export function onDragEnd(e, rectangle, rectangles) {
       )
     : null;
   rectangle.off("pointermove");
-}
+};
 
-export function onDragMove(e, rectangle, rectangles) {
+const onDragMove = function (e, rectangle, rectangles) {
   //if (rectangle.dragging != true) return;
   if (rectangle.dragging) {
     rectangle.position.x += e.data.originalEvent.movementX;
@@ -56,8 +58,8 @@ export function onDragMove(e, rectangle, rectangles) {
     logDrag ? console.log("onDragMove") : null;
     changeRectColor(rectangle, rectangle.labelColor);
   }
-}
-export function changeRectColor(sq, color) {
+};
+const changeRectColor = function (sq, color) {
   logDrag ? console.log("changeColor") : null;
   const square = sq;
   //logDrag ? console.log(square) : null;
@@ -81,19 +83,19 @@ export function changeRectColor(sq, color) {
     : null;
     */
   sq.endFill();
-}
+};
 
 //function for drawing in different directions
-export function getStartCoordinates(startX, startY, endX, endY) {
+const getStartCoordinates = function (startX, startY, endX, endY) {
   var width, height, startRectX, startRectY;
   startX < endX ? (width = endX - startX) : (width = startX - endX);
   startY < endY ? (height = endY - startY) : (height = startY - endY);
   startX < endX ? (startRectX = startX) : (startRectX = endX);
   startY < endY ? (startRectY = startY) : (startRectY = endY);
   return { startRectX, startRectY, width, height };
-}
+};
 
-export function addDragHand(rectangle, rectangles) {
+const addDragHand = function (rectangle, rectangles) {
   const png = PIXI.Texture.from(
     `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
   );
@@ -116,9 +118,9 @@ export function addDragHand(rectangle, rectangles) {
   logResize ? console.log("handle-hitarea", hitArea) : null;
   handle.scale.set(scaleHandle, scaleHandle);
   rectangle.addChild(handle);
-}
+};
 
-export function handleResizerRect(
+const handleResizerRect = function (
   e,
   rectangle,
   mainContainer,
@@ -168,8 +170,8 @@ export function handleResizerRect(
 
     rectangles.forEach((r) => mainContainer.addChild(r));
   }
-}
-export function handleResizerRect2(
+};
+const handleResizerRect2 = function (
   e,
   rectangle,
   mainContainer,
@@ -190,9 +192,9 @@ export function handleResizerRect2(
   //handle.x = rectangle.width - handle.width/2;
   //handle.y = rectangle.height - handle.height/2;
   //console.log("dragMove",isDrawing)
-}
+};
 
-export function removeRectangle(rectangle, array) {
+const removeRectangle = function (rectangle, array) {
   logResize
     ? console.log(
         "removeRectangle",
@@ -201,4 +203,4 @@ export function removeRectangle(rectangle, array) {
     : null;
   array = array.filter((rect) => rect.name != rectangle.name);
   return array;
-}
+};

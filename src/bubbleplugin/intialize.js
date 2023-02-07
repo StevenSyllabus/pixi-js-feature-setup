@@ -10,9 +10,10 @@ function(instance, context) {
     instance.data.logEvents = false;
     instance.data.randomElementID = `pixi-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
     instance.data.webpageScreenshot;
-    instance.data.labelFont;
-    instance.data.labelFontSize;
-    instance.data.labelFontColor;
+    instance.data.labelFont = "Inter";
+    instance.data.labelFontSize = "20";
+    instance.data.labelFontColor = "000000";
+    instance.data.highlightColorAlpha = ".3";
     instance.data.dasOrigin;
     instance.data.addedMainContainerEventListeners = false;
     instance.data.createdScrollBar = false;
@@ -22,7 +23,9 @@ function(instance, context) {
     instance.data.scrollBarLastY;
     instance.data.scrollBarLastTop;
     instance.data.accountWebPageID;
-
+    instance.data.scalingShape;
+    instance.data.rectangleBeingResized;
+    instance.data.changeColor = false;
 
 
 
@@ -65,6 +68,7 @@ function(instance, context) {
     instance.data.textureMove = PIXI.Texture.from(instance.data.hrefMove);
     instance.data.textureScale = PIXI.Texture.from(instance.data.hrefScale);
     instance.data.highlightColor = "FFFF00"; //yellow
+    instance.data.highlightColorAlpha = .3;
     instance.data.dragColor = "DE3249"; //red
     instance.data.resizeColor = "FFFF00"; //"0000FF"; //blue
     // Start position of events
@@ -307,7 +311,7 @@ function(instance, context) {
     };
     const onDragStart = function (e, rectangle, rectangles) {
         const mousePosition = e.data.global;
-        changeRectColor(rectangle, rectangle.labelColor);
+        if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.labelColor); }
         rectangle.interactive = true; // Make the rectangle interactive
         rectangle.dragging = true;
         if (rectangle.resizing) {
@@ -328,7 +332,7 @@ function(instance, context) {
     const onDragEnd = function (e, rectangle, rectangles) {
         //rectangle.selected = false;
 
-        changeRectColor(rectangle, rectangle.oldColor);
+        if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.oldColor); }
         rectangles.forEach((r) => (r.dragging = false));
         rectangles.forEach((r) => (r.interactive = false));
         logDrag
@@ -351,7 +355,7 @@ function(instance, context) {
             rectangle.lastMoveY = rectangle.position.y;
 
             logDrag ? console.log("onDragMove") : null;
-            changeRectColor(rectangle, rectangle.labelColor);
+            if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.labelColor); }
         }
     };
     const changeRectColor = function (sq, color) {
@@ -359,7 +363,7 @@ function(instance, context) {
         const square = sq;
         //logDrag ? console.log(square) : null;
         sq.clear();
-        sq.beginFill(color, 0.5);
+        sq.beginFill("0x" + color, 0.5);
         sq.lineStyle(square.lineStyle);
         sq.drawRect(
             square.myRectanglePosition[0],
@@ -391,8 +395,7 @@ function(instance, context) {
     };
 
     instance.data.addDragHand = function (rectangle, rectangles) {
-        const png = PIXI.Texture.from(
-            `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
+        const png = PIXI.Texture.from(`https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
         );
         const handle = PIXI.Sprite.from(png);
         handle.interactive = true;
@@ -573,9 +576,9 @@ function(instance, context) {
 
     instance.data.addLabel = function (rect) {
         const label = new PIXI.Text(rect.name, {
-            fontFamily: "Inter",
-            fontSize: 24,
-            stroke: 0x000000,
+            fontFamily: instance.data.labelFont,
+            fontSize: instance.data.labelFontSize,
+            stroke: "0x" + instance.data.labelFontColor,
             strokeThickness: 1,
             dropShadow: true,
             dropShadowColor: 0xffffff,
@@ -593,23 +596,23 @@ function(instance, context) {
     instance.data.createExistingRect = function (createCoord, color, name, id) {
         // Create graphics
         console.log("createCoord", createCoord);
-        if (color == "") {
-            color = highlightColor;
+        if (color == null) {
+            color = instance.data.highlightColor;
         }
         instance.data.currentRectangle = new PIXI.Graphics()
-            .beginFill("0x" + color, 0.5)
-            // returns initial graphis so we can daizy chaing
+            .beginFill("0x" + color, .5)
+            // returns initial graphics
             .lineStyle({
                 color: 0x111111,
                 alpha: 0,
                 width: 1,
             })
-            //create rect in orgin for calculation simplification
+            //create rect in origin for calculation simplification
             .drawRect(0, 0, createCoord.width, createCoord.height)
             .endFill();
 
-        instance.data.currentRectangle.labelColor = "0x" + color;
-        instance.data.currentRectangle.oldColor = "0x" + color;
+        instance.data.currentRectangle.labelColor = color;
+        instance.data.currentRectangle.oldColor = color;
         instance.data.currentRectangle.name = name;
         instance.data.currentRectangle.id = id;
         console.log(`the current rect data for id`, instance.data.currentRectangle);
@@ -632,36 +635,6 @@ function(instance, context) {
         instance.data.currentRectangle = null;
     };
 
-    // Function that generates test rect
-    instance.data.testRect = function () {
-        // Create graphics
-        instance.data.currentRectangle = new PIXI.Graphics()
-            .beginFill("0x" + highlightColor, 0.5)
-            // returns initial graphis so we can daizy chaing
-            .lineStyle({
-                color: 0x111111,
-                alpha: 0,
-                width: 1,
-            })
-            // we create rect in orgin for calculation simplification
-            .drawRect(0, 0, 100, 100)
-            .endFill();
-        // then we move it to final position
-        instance.data.currentRectangle.labelColor = "0x";
-        instance.data.currentRectangle.oldColor = "0xFFFF00";
-        instance.data.currentRectangle.name = "0xFFFF00";
-        instance.data.currentRectangle.position.copyFrom(new PIXI.Point(100, 100));
-        instance.data.addLabel(instance.data.currentRectangle);
-        instance.data.mainContainer.addChild(instance.data.currentRectangle);
-        // make it hoverable
-        instance.data.currentRectangle.interactive = true;
-        instance.data.addLabel(instance.data.currentRectangle);
-        instance.data.currentRectangle
-            .on("pointerover", instance.data.onRectangleOver)
-            .on("pointerout", instance.data.onRectangleOut);
-        instance.data.currentRectangle = null;
-    };
-    //testRect()
     instance.data.controlOver = function () {
         this.isOver = true;
     };
@@ -793,6 +766,8 @@ function(instance, context) {
 
     //these two are slightly different, could probably be combined
     const scaleRect = function (resizeRectange, dragController) {
+        instance.data.scalingShape = resizeRectange;
+
         //currentPosition)
         let { start, size } = instance.data.getStartAndSize(
             instance.data.startPosition,
@@ -829,6 +804,7 @@ function(instance, context) {
             console.log(`resizeRectange.width`, resizeRectange.width);
             console.log(`resizeRectange.height`, resizeRectange.height);
             console.log(`resizeRectange.scale`, resizeRectange.scale);
+            console.log(`resizeRectange.intialScale`, resizeRectange.intialScale);
 
             //update the shape in the database
             // let headersList = {
@@ -855,6 +831,7 @@ function(instance, context) {
             //         console.log(result.response.drawn_attribute_snippet._id);
             //     })
         }, 100);
+        instance.data.rectangleBeingResized = resizeRectange;
         console.log(
             "scaleRect, startPos, startPosController,dragcontroller,mainContainer",
             instance.data.startPosition,
@@ -940,6 +917,8 @@ function(instance, context) {
         // stop drag, remove parameters
         // return input mode to default
         if (instance.data.dragController) {
+            console.log(`resize currentrect:`, instance.data.currentRectangle)
+
             instance.data.mainContainer.off("pointermove", instance.data.onDragMoveNew);
             instance.data.dragController.alpha = 1;
             instance.data.currentRectangle = null;

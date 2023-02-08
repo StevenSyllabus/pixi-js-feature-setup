@@ -39,8 +39,13 @@ ATT
     instance.data.webpageScreenshot = properties.webpage_screenshot;
     instance.data.labelFont = properties.font;
     instance.data.labelFontSize = properties.font_size;
-    instance.data.labelFontColor = properties.labelFontColor.slice(1);
+    instance.data.labelFontColor = properties.labelFontColor;
     instance.data.dasOrigin = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length());
+    instance.data.highlightColor = properties.highlight_color; //yellow
+    instance.data.highlightColorAlpha = properties.highlight_color_alpha;
+    instance.data.dragColor = properties.drag_color; //red
+    instance.data.resizeColor = properties.resize_color;
+    instance.data.changeColor = properties.changeColor;
     var DAS = instance.data.dasOrigin;
 
     /*
@@ -308,13 +313,13 @@ ATT
                             } = instance.data.getStartAndSize(currentPosition, instance.data.startPosition, "draw")
                             if (size.x > 5 && size.y > 5) {
                                 if (!instance.data.currentRectangle) {
-                                    instance.data.currentRectangle = new PIXI.Graphics().beginFill("0x" + instance.data.highlightColor, .5)
+                                    instance.data.currentRectangle = new PIXI.Graphics().beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
                                         .lineStyle({
                                             color: "0x" + instance.data.highlightColor,
                                             alpha: 0.5,
                                             width: 1
                                         }).drawRect(0, 0, size.x, size.y).endFill()
-                                    instance.data.currentRectangle.labelColor = "0x" + instance.data.highlightColor;
+                                    instance.data.currentRectangle.labelColor = instance.data.highlightColor;
                                     instance.data.currentRectangle.oldColor = instance.data.highlightColor;
                                     instance.data.currentRectangle.name = "";
                                     instance.data.currentRectangle.intialScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
@@ -334,6 +339,7 @@ ATT
                         }
                     });
                     mainContainer.on('pointerup', (e) => {
+
                         // Wrap up rect creation
                         instance.data.startPosition = null
                         if (instance.data.currentRectangle && instance.data.currentRectangle.interactive == false) {
@@ -404,6 +410,87 @@ ATT
 
                         }
                         instance.data.currentRectangle = null
+
+                        if (instance.data.rectangleBeingResized) {
+                            console.log(`the rectangle being resize is`, instance.data.rectangleBeingResized)
+                            //update the shape in the database
+                            let headersList = {
+                                "Accept": "*/*",
+                            }
+                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
+                            let bodyContent = new FormData();
+                            bodyContent.append("x", instance.data.rectangleBeingResized.position.x);
+                            bodyContent.append("y", instance.data.rectangleBeingResized.position.y);
+                            bodyContent.append("width", instance.data.rectangleBeingResized.width);
+                            bodyContent.append("height", instance.data.rectangleBeingResized.height);
+                            bodyContent.append("initial_drawn_scale", drawnScale)
+                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingResized.id);
+
+
+                            let currentUrl = window.location.href;
+                            let urlArray = currentUrl.split('/');
+                            let secondSlash = urlArray[3];
+
+                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+                                method: "POST",
+                                body: bodyContent,
+                                headers: headersList
+                            }).then(response => response.json())
+                                .then(result => {
+                                    let newID = result.response.drawn_attribute_snippet._id;
+                                    console.log(`the new id`, newID);
+                                    console.log(result.response);
+                                    console.log(result.response.drawn_attribute_snippet);
+                                    console.log(result.response.drawn_attribute_snippet._id);
+                                })
+
+
+
+                            instance.data.rectangleBeingResized = null;
+                        }
+
+                        if (instance.data.rectangleBeingMoved) {
+                            console.log(`the rectangle being moved is`, instance.data.rectangleBeingMoved)
+
+
+                            let headersList = {
+                                "Accept": "*/*",
+                            }
+                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
+                            let bodyContent = new FormData();
+                            bodyContent.append("x", instance.data.rectangleBeingMoved.position.x);
+                            bodyContent.append("y", instance.data.rectangleBeingMoved.position.y);
+                            bodyContent.append("width", instance.data.rectangleBeingMoved.width);
+                            bodyContent.append("height", instance.data.rectangleBeingMoved.height);
+                            bodyContent.append("initial_drawn_scale", drawnScale)
+                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingMoved.id);
+
+
+                            let currentUrl = window.location.href;
+                            let urlArray = currentUrl.split('/');
+                            let secondSlash = urlArray[3];
+
+                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+                                method: "POST",
+                                body: bodyContent,
+                                headers: headersList
+                            }).then(response => response.json())
+                                .then(result => {
+                                    let newID = result.response.drawn_attribute_snippet._id;
+                                    console.log(`the new id`, newID);
+                                    console.log(result.response);
+                                    console.log(result.response.drawn_attribute_snippet);
+                                    console.log(result.response.drawn_attribute_snippet._id);
+                                })
+
+
+                            instance.data.rectangleBeingMoved = null;
+                        }
+
+
+
                         instance.data.onDragEndNew()
                     });
                     //load our data

@@ -25,6 +25,7 @@ function(instance, context) {
     instance.data.accountWebPageID;
     instance.data.scalingShape;
     instance.data.rectangleBeingResized;
+    instance.data.rectangleBeingMoved;
     instance.data.changeColor = false;
 
 
@@ -873,6 +874,10 @@ function(instance, context) {
         // we just move the start position
         resizeRectange.position.copyFrom(startPosition);
         dragController.position.copyFrom(startPositionController);
+
+        console.log(`moverect`, resizeRectange)
+        instance.data.rectangleBeingMoved = resizeRectange;
+
     };
     instance.data.selectRect = function (rectangle) {
         instance.publishState("currently_selected_drawing", rectangle.id)

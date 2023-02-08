@@ -413,7 +413,80 @@ ATT
 
                         if (instance.data.rectangleBeingResized) {
                             console.log(`the rectangle being resize is`, instance.data.rectangleBeingResized)
+                            //update the shape in the database
+                            let headersList = {
+                                "Accept": "*/*",
+                            }
+                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
+                            let bodyContent = new FormData();
+                            bodyContent.append("x", instance.data.rectangleBeingResized.position.x);
+                            bodyContent.append("y", instance.data.rectangleBeingResized.position.y);
+                            bodyContent.append("width", instance.data.rectangleBeingResized.width);
+                            bodyContent.append("height", instance.data.rectangleBeingResized.height);
+                            bodyContent.append("initial_drawn_scale", drawnScale)
+                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingResized.id);
+
+
+                            let currentUrl = window.location.href;
+                            let urlArray = currentUrl.split('/');
+                            let secondSlash = urlArray[3];
+
+                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+                                method: "POST",
+                                body: bodyContent,
+                                headers: headersList
+                            }).then(response => response.json())
+                                .then(result => {
+                                    let newID = result.response.drawn_attribute_snippet._id;
+                                    console.log(`the new id`, newID);
+                                    console.log(result.response);
+                                    console.log(result.response.drawn_attribute_snippet);
+                                    console.log(result.response.drawn_attribute_snippet._id);
+                                })
+
+
+
                             instance.data.rectangleBeingResized = null;
+                        }
+
+                        if (instance.data.rectangleBeingMoved) {
+                            console.log(`the rectangle being moved is`, instance.data.rectangleBeingMoved)
+
+
+                            let headersList = {
+                                "Accept": "*/*",
+                            }
+                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
+                            let bodyContent = new FormData();
+                            bodyContent.append("x", instance.data.rectangleBeingMoved.position.x);
+                            bodyContent.append("y", instance.data.rectangleBeingMoved.position.y);
+                            bodyContent.append("width", instance.data.rectangleBeingMoved.width);
+                            bodyContent.append("height", instance.data.rectangleBeingMoved.height);
+                            bodyContent.append("initial_drawn_scale", drawnScale)
+                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingMoved.id);
+
+
+                            let currentUrl = window.location.href;
+                            let urlArray = currentUrl.split('/');
+                            let secondSlash = urlArray[3];
+
+                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+                                method: "POST",
+                                body: bodyContent,
+                                headers: headersList
+                            }).then(response => response.json())
+                                .then(result => {
+                                    let newID = result.response.drawn_attribute_snippet._id;
+                                    console.log(`the new id`, newID);
+                                    console.log(result.response);
+                                    console.log(result.response.drawn_attribute_snippet);
+                                    console.log(result.response.drawn_attribute_snippet._id);
+                                })
+
+
+                            instance.data.rectangleBeingMoved = null;
                         }
 
 

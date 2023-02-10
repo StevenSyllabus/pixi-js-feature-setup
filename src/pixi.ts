@@ -1,20 +1,11 @@
-//@ts-nocheck this turns off typesccript checks for the entire file
 import * as PIXI from "pixi.js";
-
-//simply import the Bubble testing functions from the other file.
-import { DAS, att, colors, rects, rects2 } from "./test-data";
+import { DAS, att, colors } from "./test-data";
 
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
+
 //start C Declare before import
 let logging = true;
-let logDrag = false;
-let logResize = false;
-let logRectEvents = false;
 let loadData = true;
-let logEvents = false;
-
-const rectangles = [];
-const resizeHandles = [];
 const imgixBaseURL = `https://d1muf25xaso8hp.cloudfront.net/`;
 const mainContainer = new PIXI.Container();
 const ele = document.getElementById(`test`);
@@ -23,16 +14,12 @@ const app = new PIXI.Application({
   resizeTo: ele,
 });
 
-var canvasElement = mainContainer;
 let intialWebpageWidth,
-  intialWebpageHeight,
   intialCanvasWidth,
-  intialCanvasHeight,
   intialScale,
   webpageSprite,
   scrollBar = <PIXI.Graphics>{};
 
-let resizeTimeout = null;
 /////////////////////NEW DRAWING
 // Input modes for input
 let InputModeEnum = {
@@ -40,6 +27,7 @@ let InputModeEnum = {
   select: 2,
   scale: 3,
   move: 4,
+  highlighted: 5,
 };
 
 // Load textures for edit
@@ -50,7 +38,7 @@ const hrefScale =
 const textureMove = PIXI.Texture.from(hrefMove);
 const textureScale = PIXI.Texture.from(hrefScale);
 const highlightColor = "FFFF00"; //yellow
-const dragColor = "DE3249"; //red
+const highlightColorAsHex = 0xffff00;
 const resizeColor = "FFFF00"; //"0000FF"; //blue
 // Start position of events
 let startPosition = null;
@@ -62,6 +50,107 @@ let inputMode = InputModeEnum.create;
 let dragController = null;
 // Active shown controls (can be shown both or one hovered / active)
 let controls = [];
+//seleted rectangle
+let selectedRectangle = PIXI.Graphics;
+
+//create a proxy variable to handle updates to the certain data. Proxys are a way to intercept and handle data changes. the set function is called when the data is changed. This is a way to handle data changes in a more controlled way.
+
+const proxyVariables = new Proxy(
+  {
+    selectedRectangle: null,
+    inputMode: InputModeEnum.create,
+  },
+  {
+    //this is the set function. This is called when the data is changed.
+    //obj is the object that is being changed
+    //prop is the property that is being changed
+    //value is the new value that is being set
+    set: function (obj, prop, value) {
+      let previousValue = obj[prop];
+      console.log(`proxy previous value ${obj[prop]}`);
+      console.log(`proxy current value ${value}`);
+
+      //check if the property is selectedRectangle
+      if (prop === `selectedRectangle`) {
+        //check if the value is not null and the value is not the same as the previous value
+
+        if (value && value !== previousValue) {
+          console.log(`proxy value selected`, value);
+          document.title = value.name;
+
+          //loop through all of the containers on the main container (the squares)
+          mainContainer.children.forEach((child) => {
+            //loop through all of the graphics on the mainContainer (just the squares itself)
+            child.children.forEach((child: PIXI.Graphics) => {
+              //clear all of the selected states
+
+              child.isHighlighted = false;
+
+              //temporary if statement. This needs to be swapped to say if(child.labelID === value.labelID). This will then highlight everything that is the same labelID. Currently its just everything for testing purposes.
+              if (true) {
+                let borderWidth = child.line.width;
+                let height = child.height - borderWidth;
+                let width = child.width - borderWidth;
+                child.isHighlighted = true;
+
+                //clear the drawing, and redraw the square with the highlight color
+                child.clear();
+                child.beginFill(highlightColorAsHex, 0.5);
+                child.lineStyle(1, 0x000000, 1);
+
+                //we minus 1 to account for the border. Theres a slight increase
+                child.drawRect(0, 0, width, height);
+                child.endFill();
+              }
+            });
+          });
+          value.isSelected = true;
+
+          //set the value of the property to the new value
+          obj[prop] = value;
+        }
+        //check if the selected shape is null and the previous value is not null
+        // these runs our `deselect` function essentially
+        //it also prevents this from running if we're changing the value from null to null
+        else if (!value && previousValue) {
+          console.log(`no proxy value running`, value);
+          document.title = "No Selection";
+          mainContainer.children.forEach((child) => {
+            child.isSelected = false;
+            child.children.forEach((child: PIXI.Graphics) => {
+              child.isHighlighted = false;
+              let height = child.height - 1;
+              let width = child.width - 1;
+              let color = child.labelColor;
+              child
+                .clear()
+                .beginFill(color, 1)
+                .drawRect(0, 0, width, height)
+                .endFill()
+                .beginHole()
+                .drawRect(5, 5, width - 10, height - 10)
+                .endHole();
+            });
+          });
+          obj[prop] = value;
+        }
+        if (obj.selectedRectangle && obj.selectedRectangle !== value) {
+          obj.selectedRectangle.tint = 0xffffff;
+          obj.selectedRectangle.interactive = false;
+        }
+      }
+      if (prop === `inputMode`) {
+        if (value === InputModeEnum.create) {
+        } else if (value === InputModeEnum.select) {
+        } else if (value === InputModeEnum.scale) {
+        } else if (value === InputModeEnum.move) {
+        } else if (value === InputModeEnum.highlighted) {
+        }
+      }
+      return true;
+    },
+  }
+);
 
 //end C Declare
 
@@ -73,7 +162,7 @@ app.stage.addChild(mainContainer);
 ele.appendChild(app.view);
 
 const screenshot = PIXI.Texture.fromURL(
-  `${imgixBaseURL}https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${canvasElement.clientWidth}`
+  `${imgixBaseURL}https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${1000}px`
 ).then((texture) => {
   console.log(`finished the texture`);
   console.log(texture);
@@ -83,7 +172,6 @@ const screenshot = PIXI.Texture.fromURL(
   console.log(`finished the sprite`);
   console.log(webpageSprite);
   intialWebpageWidth = webpageSprite.width;
-  intialWebpageHeight = webpageSprite.height;
   webpageSprite.intialWidth = webpageSprite.width;
   mainContainer.addChild(webpageSprite);
   mainContainer.interactive = true;
@@ -92,7 +180,6 @@ const screenshot = PIXI.Texture.fromURL(
   webpageSprite.scale.set(app.view.width / webpageSprite.width);
 
   intialCanvasWidth = app.view.width;
-  intialCanvasHeight = app.view.height;
   intialScale = intialCanvasWidth / intialWebpageWidth;
   webpageSprite.intialScale = app.view.width / webpageSprite.width;
   scrollBar<PIXI.Graphics> = createScrollBar(mainContainer, app, ele);
@@ -162,8 +249,6 @@ const createScrollBar = function (
 
         const scrollbarHeight =
           pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
-        const scrollbarY =
-          scrollPercent * (pixiApp.view.height - scrollbarHeight);
 
         const mouseDif = e.y - scrollbar.lastMouseY;
         console.log(mouseDif);
@@ -300,80 +385,6 @@ const handleResize = function (
   //     console.log(pixiApp.view.width / webpageSprite.intialWidth);
   //   }, 100);
 };
-const onDragStart = function (e, rectangle, rectangles) {
-  const mousePosition = e.data.global;
-  changeRectColor(rectangle, rectangle.labelColor);
-  rectangle.interactive = true; // Make the rectangle interactive
-  rectangle.dragging = true;
-  if (rectangle.resizing) {
-    logResize ? console.log("resizing active", mousePosition) : null;
-    return;
-  }
-  logDrag ? console.log("mousePosition", mousePosition) : null;
-  logDrag
-    ? console.log("myRectanglePosition", rectangle.myRectanglePosition)
-    : null;
-
-  rectangle.draggingOffset = [
-    mousePosition.x - rectangle.myRectanglePosition[0],
-    mousePosition.y - rectangle.myRectanglePosition[1],
-  ];
-};
-
-const onDragEnd = function (e, rectangle, rectangles) {
-  //rectangle.selected = false;
-
-  changeRectColor(rectangle, rectangle.oldColor);
-  rectangles.forEach((r) => (r.dragging = false));
-  rectangles.forEach((r) => (r.interactive = false));
-  logDrag
-    ? console.log(
-        "DragEnd,color,interactive,selected",
-        rectangle.labelColor,
-        rectangle.interactive,
-        rectangle.selected
-      )
-    : null;
-  rectangle.off("pointermove");
-};
-
-const onDragMove = function (e, rectangle, rectangles) {
-  //if (rectangle.dragging != true) return;
-  if (rectangle.dragging) {
-    rectangle.position.x += e.data.originalEvent.movementX;
-    rectangle.position.y += e.data.originalEvent.movementY;
-    rectangle.lastMoveX = rectangle.position.x;
-    rectangle.lastMoveY = rectangle.position.y;
-
-    logDrag ? console.log("onDragMove") : null;
-    changeRectColor(rectangle, rectangle.labelColor);
-  }
-};
-const changeRectColor = function (sq, color) {
-  logDrag ? console.log("changeColor") : null;
-  const square = sq;
-  //logDrag ? console.log(square) : null;
-  sq.clear();
-  sq.beginFill(color, 0.5);
-  sq.lineStyle(square.lineStyle);
-  sq.drawRect(
-    square.myRectanglePosition[0],
-    square.myRectanglePosition[1],
-    square.myRectanglePosition[2],
-    square.myRectanglePosition[3]
-  );
-  /*logDrag
-    ? console.log(
-        "squareDeets",
-        square.myRectanglePosition[0],
-        square.myRectanglePosition[1],
-        square.myRectanglePosition[2],
-        square.myRectanglePosition[3]
-      )
-    : null;
-    */
-  sq.endFill();
-};
 
 //function for drawing in different directions
 const getStartCoordinates = function (startX, startY, endX, endY) {
@@ -385,123 +396,8 @@ const getStartCoordinates = function (startX, startY, endX, endY) {
   return { startRectX, startRectY, width, height };
 };
 
-const addDragHand = function (rectangle, rectangles) {
-  const png = PIXI.Texture.from(
-    `https://s3.amazonaws.com/appforest_uf/d110/f1674669224748x768134644407078900/drag_indicator_FILL0_wght400_GRAD0_opsz48.png`
-  );
-  const handle = PIXI.Sprite.from(png);
-  handle.interactive = true;
-  var handlePosAdjustX = -30;
-  var handlePosAdjustY = 0;
-  var scaleHandle = 0.75;
-  handle.position.set(
-    rectangle.myRectanglePosition[0] +
-      rectangle.myRectanglePosition[2] +
-      handlePosAdjustX,
-    rectangle.myRectanglePosition[1] + handlePosAdjustY
-  );
-  //console.log("rectBounds",(rectangle.myRectanglePosition[0] + rectangle.myRectanglePosition[2] - handlePosAdjustX), (rectangle.myRectanglePosition[1] + rectangle.myRectanglePosition[3] - handlePosAdjustY));
-  const hitArea = new PIXI.Rectangle(0, 0, 64 * scaleHandle, 64 * scaleHandle);
-  handle.hitArea = hitArea;
-  handle.buttonMode = true;
-  handle.name = "dragHandle";
-  logResize ? console.log("handle-hitarea", hitArea) : null;
-  handle.scale.set(scaleHandle, scaleHandle);
-  rectangle.addChild(handle);
-};
-
-const handleResizerRect = function (
-  e,
-  rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
-) {
-  logResize
-    ? console.log("handle-resizer", rectangle, rectangle.resizing)
-    : null;
-  if (isResizing) {
-    // Clear the stage
-    mainContainer.removeChildren();
-    const rect = new PIXI.Graphics();
-    rect.name = rectangle.name;
-    removeRectangle(rectangle, rectangles);
-    rectangle.clear();
-
-    // Add the image back to the stage
-    mainContainer.addChild(webpageSprite);
-
-    // Calculate the current position of the pointer
-    let endX = e.globalX;
-    let endY = e.globalY;
-    logResize ? console.log("handle-endX-endY", endX, endY) : null;
-    // Calculate the dimensions of the rectangle
-    let coordinates = getStartCoordinates(
-      rectangle.myRectanglePosition[0],
-      rectangle.myRectanglePosition[1],
-      endX,
-      endY
-    );
-    logResize ? console.log("handle-coordinates", coordinates) : null;
-    // Create a new rectangle graphic using the calculated dimensions
-
-    rect.beginFill(0x0000ff, 0.5); // Transparent blue
-    rect.drawRect(
-      coordinates.startRectX,
-      coordinates.startRectY,
-      coordinates.width,
-      coordinates.height
-    );
-    rect.endFill();
-    // Add the rectangle to the stage
-    //mainContainer.addChild(rect);
-    rectangles.push(rect);
-    // Add all previously added rectangles back to the stage
-
-    rectangles.forEach((r) => mainContainer.addChild(r));
-  }
-};
-const handleResizerRect2 = function (
-  e,
-  rectangle,
-  mainContainer,
-  rectangles,
-  webpageSprite
-) {
-  var initialMousePosX = rectangle.myRectanglePosition[0];
-  var initialMousePosY = rectangle.myRectanglePosition[1];
-  var currentMousePosY, currentMousePosX;
-  var initialRectWidth = rectangle.width;
-  var initialRectHeight = rectangle.height;
-  var currentMousePosX = e.data.global.x;
-  var currentMousePosY = e.data.global.y;
-  var deltaX = currentMousePosX - initialMousePosX;
-  var deltaY = currentMousePosY - initialMousePosY;
-  rectangle.width = initialRectWidth + deltaX;
-  rectangle.height = initialRectHeight + deltaY;
-  //handle.x = rectangle.width - handle.width/2;
-  //handle.y = rectangle.height - handle.height/2;
-  //console.log("dragMove",isDrawing)
-};
-
-const removeRectangle = function (rectangle, array) {
-  logResize
-    ? console.log(
-        "removeRectangle",
-        array.filter((rect) => rect.name == rectangle.name)
-      )
-    : null;
-  array = array.filter((rect) => rect.name != rectangle.name);
-  return array;
-};
-
 //begin functions
-const findRect = function (name) {
-  const foundRectangle = rectangles.find((r) => r.name === name);
-  if (foundRectangle) {
-    return foundRectangle;
-  }
-};
+
 //loads & reformats Drawn Attribute Snippets
 const loadDAS = function (das) {
   das.forEach((das, index) => {
@@ -520,7 +416,13 @@ const loadDAS = function (das) {
     if (createCoord.width < 20) return;
     if (createCoord.height < 20) return;
     console.log("att", att[0]);
-    createExistingRect(createCoord, colors[index], att[index].Name);
+    createExistingRect(
+      createCoord,
+      colors[index],
+      att[index].Name,
+      das["_id"],
+      das.Attribute
+    );
     //createRect(das['X Coordinate (500)'], das['Y Coordinate (500)'], das['Box Width 250'], das['Box Height 250'], colors[index], das['_id']);
   });
 };
@@ -544,86 +446,113 @@ const addLabel = function (rect) {
   label.position.set(10, 10);
 };
 
-const createExistingRect = function (createCoord, color, name) {
+const createExistingRect = function (
+  createCoord,
+  color,
+  name,
+  uniqueID,
+  labelID
+) {
   // Create graphics
 
   if (color == "") {
     color = highlightColor;
   }
-  currentRectangle = new PIXI.Graphics()
-    .beginFill("0x" + color, 0.5)
+
+  let rectContainer = new PIXI.Container();
+  rectContainer.name = name;
+  console.log(`the color is: ${color}`);
+
+  let createdRectangle = new PIXI.Graphics()
+    .beginFill("0x" + color, 1)
     // returns initial graphis so we can daizy chaing
-    .lineStyle({
-      color: 0x111111,
-      alpha: 0,
-      width: 1,
-    })
+
     //create rect in orgin for calculation simplification
     .drawRect(0, 0, createCoord.width, createCoord.height)
     .endFill();
+  rectContainer.addChild(createdRectangle);
+  createdRectangle.beginHole();
+  createdRectangle.drawRect(
+    5,
+    5,
+    createCoord.width - 10,
+    createCoord.height - 10
+  );
+  createdRectangle.endHole();
 
-  currentRectangle.labelColor = "0x" + color;
-  currentRectangle.oldColor = "0x" + color;
-  currentRectangle.name = name;
+  createdRectangle.labelColor = "0x" + color;
+  createdRectangle.oldColor = "0x" + color;
+  createdRectangle.name = name;
+  createdRectangle.id = uniqueID;
+  createdRectangle.labelID = labelID;
+  createdRectangle.intialScale = 1;
+  createdRectangle.cursor = "pointer";
+  createdRectangle.addEventListener("pointermove", (event) => {
+    if (inputMode === InputModeEnum.scale) {
+      return;
+    }
+    if (inputMode === InputModeEnum.create) {
+      createdRectangle.cursor = "crosshair";
+      return;
+    }
+    inputMode = InputModeEnum.select;
+    const x = event.global.x - mainContainer.x;
+    const y = event.global.y - mainContainer.y;
+    console.log(createdRectangle);
+    console.log(`the event global`, x, y);
+    console.log(`the event`, event.target.x, event.target.y);
+    console.log(`the event height`, event.target.width, event.target.height);
+
+    if (
+      x >= event.target.x + event.target.width - 20 &&
+      y >= event.target.y + event.target.height - 20 &&
+      proxyVariables.selectedRectangle === createdRectangle
+    ) {
+      console.log(
+        "The mouse is in the bottom right corner and a rectangle is selected"
+      );
+      event.target.cursor = "nwse-resize";
+      inputMode = InputModeEnum.scale;
+    } else if (proxyVariables.selectedRectangle === createdRectangle) {
+      event.target.cursor = "move";
+    } else {
+      event.target.cursor = "pointer";
+    }
+  });
+
   // then we move it to final position
-  currentRectangle.position.copyFrom(
+  createdRectangle.position.copyFrom(
     new PIXI.Point(createCoord.startRectX, createCoord.startRectY)
   );
+  createdRectangle.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+    const x = event.global.x - mainContainer.x;
+    const y = event.global.y - mainContainer.y;
+
+    if (event.target === proxyVariables.selectedRectangle) {
+    }
+
+    if (event.target !== proxyVariables.selectedRectangle)
+      selectRectangle(event.target);
+    //check if the mouse is in the bottom right corner, and set the mouse cursor to nwse-resize
+  });
   //addLabel(currentRectangle);
-  mainContainer.addChild(currentRectangle);
+  mainContainer.addChild(rectContainer);
+  console.log(`the rectContainer is:`, rectContainer);
   // make it hoverable
-  currentRectangle.interactive = true;
-  currentRectangle
-    .on("pointerover", onRectangleOver)
-    .on("pointerout", onRectangleOut);
+  createdRectangle.interactive = true;
+
+  createdRectangle.isOver = false;
   // remove it from current ceration and chose new color for next one
-  addLabel(currentRectangle);
-  console.log("currentRect that im testing", currentRectangle);
-  currentRectangle.intialScale = app.view.width / intialWebpageWidth;
+  addLabel(createdRectangle);
+  console.log("currentRect that im testing", createdRectangle);
+  createdRectangle.intialScale = app.view.width / intialWebpageWidth;
 
   currentRectangle = null;
-};
-
-// Function that generates test rect
-const testRect = function () {
-  // Create graphics
-  currentRectangle = new PIXI.Graphics()
-    .beginFill("0x" + highlightColor, 0.5)
-    // returns initial graphis so we can daizy chaing
-    .lineStyle({
-      color: 0x111111,
-      alpha: 0,
-      width: 1,
-    })
-    // we create rect in orgin for calculation simplification
-    .drawRect(0, 0, 100, 100)
-    .endFill();
-  // then we move it to final position
-  currentRectangle.labelColor = "0x";
-  currentRectangle.oldColor = "0xFFFF00";
-  currentRectangle.name = "0xFFFF00";
-  currentRectangle.position.copyFrom(new PIXI.Point(100, 100));
-  addLabel(currentRectangle);
-  mainContainer.addChild(currentRectangle);
-  // make it hoverable
-  currentRectangle.interactive = true;
-  addLabel(currentRectangle);
-  currentRectangle
-    .on("pointerover", onRectangleOver)
-    .on("pointerout", onRectangleOut);
-  currentRectangle = null;
-};
-//testRect()
-const controlOver = function () {
-  this.isOver = true;
-};
-
-const controlOut = function () {
-  this.isOver = false;
-  removeIfUnused(this);
 };
 
 const onRectangleOver = function () {
+  console.log(`onRectangleOver`);
   // Do not hover rectangle if we are moving
   if (inputMode == InputModeEnum.move || inputMode == InputModeEnum.scale) {
     return;
@@ -634,63 +563,66 @@ const onRectangleOver = function () {
   }
   console.log("Over");
   this.isOver = true;
-  inputMode = InputModeEnum.select;
   // set current hovered rect to be on the top
-  bringToFront(this);
+  bringShapeToFront(this);
   // Create button move
-  const buttonMove = new PIXI.Sprite(textureMove);
-  // set anchor middle
-  buttonMove.anchor.set(0.5);
-  // Set control top right
-  buttonMove.x = this.x + this.width - 18;
-  buttonMove.y = this.y + 23;
+  // const buttonMove = new PIXI.Sprite(textureMove);
+  // // set anchor middle
+  // buttonMove.anchor.set(0.5);
+  // // Set control top right
+  // buttonMove.x = this.x + this.width - 18;
+  // buttonMove.y = this.y + 23;
 
-  // make interactive...
-  buttonMove.interactive = true;
-  buttonMove.cursor = "grab";
-  // Add events/pass object to pointerdown event so we know which button/control is pressed
-  buttonMove
-    .on("pointerover", controlOver)
-    .on("pointerout", controlOut)
-    .on("pointerdown", onDragStartNew, {
-      controller: buttonMove,
-      edit: this,
-      mode: InputModeEnum.move,
-    });
-  mainContainer.addChild(buttonMove);
-  // add to control queue
-  controls.push(buttonMove);
+  // // make interactive...
+  // buttonMove.interactive = true;
+  // buttonMove.cursor = "grab";
+  // // Add events/pass object to pointerdown event so we know which button/control is pressed
+  // buttonMove
+  //   .on("pointerover", controlOver)
+  //   .on("pointerout", controlOut)
+  //   .on("pointerdown", startResizeOrMove, {
+  //     controller: buttonMove,
+  //     edit: this,
+  //     mode: InputModeEnum.move,
+  //   });
+  // mainContainer.addChild(buttonMove);
+  // // add to control queue
+  // controls.push(buttonMove);
 
-  const buttonScale = new PIXI.Sprite(textureScale);
-  // same as for move but on bottom right corner
-  buttonScale.anchor.set(0.5);
-  buttonScale.x = this.x + this.width - 20;
-  buttonScale.y = this.y + this.height - 20;
+  // // const buttonScale = new PIXI.Sprite(textureScale);
+  // // // same as for move but on bottom right corner
+  // // buttonScale.anchor.set(0.5);
+  // // buttonScale.x = this.x + this.width - 20;
+  // // buttonScale.y = this.y + this.height - 20;
 
-  // make the buttonScale interactive...
-  buttonScale.interactive = true;
-  buttonScale.cursor = "nw-resize";
-  buttonScale
-    .on("pointerover", controlOver)
-    .on("pointerout", controlOut)
-    .on("pointerdown", onDragStartNew, {
-      controller: buttonScale,
-      edit: this,
-      mode: InputModeEnum.scale,
-    });
+  // // // make the buttonScale interactive...
+  // // buttonScale.interactive = true;
+  // // buttonScale.cursor = "nwse-resize";
+  // // buttonScale
+  // //   .on("pointerover", controlOver)
+  // //   .on("pointerout", controlOut)
+  // //   .on("pointerdown", startResizeOrMove, {
+  // //     controller: buttonScale,
+  // //     edit: this,
+  // //     mode: InputModeEnum.scale,
+  // //   });
 
-  mainContainer.addChild(buttonScale);
-  controls.push(buttonScale);
+  // mainContainer.addChild(buttonScale);
+  // controls.push(buttonScale);
 };
-
+//this function
 const cleanupcontrols = function () {
+  console.log("cleanupcontrols");
+  console.log("controls", controls);
   controls = controls.filter((el) => el.parent);
   if (controls.length == 0) {
-    onDragEndNew();
+    onDragEnd();
   }
+  console.log("controls after", controls);
 };
 
 const removeIfUnused = function (control) {
+  console.log("removeIfUnused", control);
   // Give time to PIXI to go trough events and add event on end
   setTimeout(() => {
     // By this time isOver is updated so if we went from
@@ -706,13 +638,15 @@ const removeIfUnused = function (control) {
 
 // Event is triggered when we move mouse out of rectangle
 const onRectangleOut = function () {
+  console.log(`onRectangleOut`);
   this.isOver = false;
-  console.log("OUT");
+  inputMode = InputModeEnum.create;
   controls.forEach((control) => removeIfUnused(control));
 };
 
 // Normalize start and size of square so we always have top left corner as start and size is always +
 const getStartAndSize = function (pointA, pointB, type) {
+  console.log(`getStartAndSize`, pointA, pointB, type);
   let deltaX = pointB.x - pointA.x;
   let deltaY = pointB.y - pointA.y;
   let absDeltaX = Math.abs(deltaX);
@@ -741,11 +675,16 @@ const getStartAndSize = function (pointA, pointB, type) {
       size: new PIXI.Point(absDeltaX, absDeltaY),
     };
   }
+  return;
 };
 
 //these two are slightly different, could probably be combined
-const scaleRect = function (resizeRectange, dragController) {
+const scaleExistingRectangle = function (
+  resizeRectange: PIXI.Graphics,
+  dragController
+) {
   //currentPosition)
+  console.log(`scaleExistingRectangle`);
   let { start, size } = getStartAndSize(
     startPosition,
     dragController.position,
@@ -755,7 +694,9 @@ const scaleRect = function (resizeRectange, dragController) {
   // When we scale rect we have to give it new cordinates so we redraw it
   // in case of sprite we would do this a bit differently with scale property,
   // for simple geometry this is better solution because scale propagates to children
-
+  console.log(`the resizeRect `, resizeRectange);
+  const rectangleColor = resizeRectange.labelColor;
+  console.log(`the resize colro is: ${rectangleColor}`);
   let startPositionController = new PIXI.Point(
     dragController.position.x - 20,
     dragController.position.y - 20
@@ -763,36 +704,37 @@ const scaleRect = function (resizeRectange, dragController) {
   resizeRectange.clear();
   resizeRectange.position.copyFrom(start);
   resizeRectange
-    .beginFill("0x" + resizeColor, 0.5)
-    .lineStyle({
-      color: 0x111111,
-      alpha: 0.5,
-      width: 1,
-    })
+    .beginFill(resizeRectange.labelColor, 1)
     .drawRect(0, 0, size.x, size.y)
     .endFill();
+  resizeRectange.beginHole();
+  resizeRectange.drawRect(5, 5, size.x - 10, size.y - 10);
+  resizeRectange.endHole();
 
   dragController.position.copyFrom(startPositionController);
-  console.log(
-    "scaleRect, startPos, startPosController,dragcontroller,mainContainer",
-    startPosition,
-    startPositionController,
-    dragController.position,
-    mainContainer.position
-  );
 };
 
-const scaleRectB = function (resizeRectange, currentPosition) {
+const drawRectangle = function (resizeRectange, currentPosition) {
+  console.log("drawRectangle");
   let { start, size } = getStartAndSize(startPosition, currentPosition, "draw");
-  console.log("scaleRectB");
   if (size.x < 5 || size.y < 5) return;
   // When we scale rect we have to give it new cordinates
   resizeRectange.clear();
   resizeRectange.position.copyFrom(start);
+
+  //child
+  //   .clear()
+  //   .beginFill(color, 1)
+  //   .drawRect(0, 0, width, height)
+  //   .endFill()
+  //   .beginHole()
+  //   .drawRect(5, 5, width - 10, height - 10)
+  //   .endHole();
+  // });
   resizeRectange
-    .beginFill("0x" + resizeColor, 0.5)
+    .beginFill(highlightColorAsHex, 0.5)
     .lineStyle({
-      color: "0x" + resizeColor,
+      color: 0x000000,
       alpha: 0.5,
       width: 1,
     })
@@ -800,9 +742,11 @@ const scaleRectB = function (resizeRectange, currentPosition) {
     .endFill();
 };
 
-const moveRect = function (resizeRectange, dragController) {
+const moveRectangle = function (resizeRectange, dragController) {
+  console.log("moveRectangle");
   // Move control is on right side
   // and our rect is anchored on the left we substact width of rect
+
   let startPosition = new PIXI.Point(
     dragController.position.x - resizeRectange.width,
     dragController.position.y
@@ -815,11 +759,13 @@ const moveRect = function (resizeRectange, dragController) {
   resizeRectange.position.copyFrom(startPosition);
   dragController.position.copyFrom(startPositionController);
 };
-const selectRect = function (rectangle) {
-  alert("Hello, " + rectangle.name + "!"); //rectangle.isSelected = true;
+const selectRectangle = function (rectangle) {
+  console.log(`selectedRectangle`, rectangle);
+  proxyVariables.selectedRectangle = rectangle;
 };
-
+//onDragMoveNew
 const onDragMoveNew = function (event) {
+  console.log(`onDragMoveNew`);
   if (dragController) {
     // move control icon (move or scale icon)
     dragController.parent.toLocal(
@@ -829,16 +775,17 @@ const onDragMoveNew = function (event) {
     );
     if (inputMode == InputModeEnum.scale) {
       // handle rect scale
-      scaleRect(currentRectangle, dragController);
+      scaleExistingRectangle(currentRectangle, dragController);
     }
     if (inputMode == InputModeEnum.move) {
       // handle rect move
-      moveRect(currentRectangle, dragController);
+      moveRectangle(currentRectangle, dragController);
     }
   }
 };
 
-const onDragStartNew = function () {
+const startResizeOrMove = function () {
+  console.log(`startResizeOrMove: pointerdown on the element`);
   // start drag of controller
   // and set parameters
   this.controller.alpha = 0.5;
@@ -849,7 +796,8 @@ const onDragStartNew = function () {
   mainContainer.on("pointermove", onDragMoveNew);
 };
 
-const onDragEndNew = function () {
+const onDragEnd = function (e) {
+  console.log(`onDragEnd: pointerup, pointerout on the element`, e);
   // stop drag, remove parameters
   // return input mode to default
   if (dragController) {
@@ -863,7 +811,8 @@ const onDragEndNew = function () {
 };
 
 ///experimental
-const bringToFront = function (sprite) {
+const bringShapeToFront = function (sprite) {
+  console.log(`bringShapeToFront`);
   var sprite = typeof sprite != "undefined" ? sprite.target || sprite : this;
   var parent = sprite.parent || {
     children: false,
@@ -878,24 +827,40 @@ const bringToFront = function (sprite) {
     parent.children.push(sprite);
   }
 };
-//load our data
 
-mainContainer.on("pointerupoutside", onDragEndNew);
+//add all main container event listeners
+mainContainer.on("pointerupoutside", (e) => onDragEnd(e));
 mainContainer.on("pointerdown", (e) => {
+  console.log(`mainContainer pointerdown`, e.target);
   // Initiate rect creation
   console.log(inputMode);
   if (inputMode == InputModeEnum.create) {
+    proxyVariables.selectedRectangle = null;
+
     startPosition = new PIXI.Point().copyFrom(e.global);
+    console.log(`selected rectangle`, proxyVariables.selectedRectangle);
 
     logging ? console.log("pointerdown", startPosition) : null;
   }
-  if (inputMode == InputModeEnum.select) {
-    //PLACEHOLDER for select function
-    selectRect(e.target);
+  // if (inputMode == InputModeEnum.select) {
+  //   //PLACEHOLDER for select function
+  //   selectRectangle(e.target);
+  // }
+  if (inputMode == InputModeEnum.move) {
   }
 });
 
 mainContainer.on("pointermove", (e) => {
+  e.stopPropagation();
+  console.log(`mainContainer pointermove`);
+
+  for (let property in InputModeEnum) {
+    if (InputModeEnum[property] == inputMode) {
+      console.log(`property`, property);
+    }
+  }
+  console.log(`currentRectangle`, currentRectangle);
+  console.log(`currentTarget`, e.currentTarget.children);
   // Do this routine only if in create mode and have started creation
   // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
   if (inputMode == InputModeEnum.create && startPosition) {
@@ -909,10 +874,10 @@ mainContainer.on("pointermove", (e) => {
     if (size.x > 5 && size.y > 5) {
       if (!currentRectangle) {
         currentRectangle = new PIXI.Graphics()
-          .beginFill("0x" + highlightColor, 0.5)
+          .beginFill(highlightColorAsHex, 0.0)
           .lineStyle({
-            color: "0x" + highlightColor,
-            alpha: 0.5,
+            color: 0x000000,
+            alpha: 1,
             width: 1,
           })
           .drawRect(0, 0, size.x, size.y)
@@ -925,7 +890,7 @@ mainContainer.on("pointermove", (e) => {
         addLabel(currentRectangle);
         mainContainer.addChild(currentRectangle);
       } else {
-        scaleRectB(currentRectangle, currentPosition);
+        drawRectangle(currentRectangle, currentPosition);
       }
     } else {
       if (currentRectangle) {
@@ -937,6 +902,7 @@ mainContainer.on("pointermove", (e) => {
 });
 
 mainContainer.on("pointerup", (e) => {
+  console.log(`mainContainer pointerup`);
   // Wrap up rect creation
   startPosition = null;
   if (currentRectangle && currentRectangle.interactive == false) {
@@ -953,5 +919,5 @@ mainContainer.on("pointerup", (e) => {
     console.log("currentRectangle scale", currentRectangle);
   }
   currentRectangle = null;
-  onDragEndNew();
+  onDragEnd(e);
 });

@@ -366,11 +366,6 @@ ATT
                             ]
 
 
-                            //get the current versions url for updating the proper database
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
-                            console.log(`secondSlash: ${secondSlash}`)
 
 
                             //create the data directly via the API
@@ -386,7 +381,7 @@ ATT
                             bodyContent.append("initial_drawn_scale", rectData[7]);
                             bodyContent.append("account_webpage", instance.data.accountWebPageID);
 
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/create-new-drawn-label`, {
+                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/create-new-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList
@@ -428,11 +423,8 @@ ATT
                             bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingResized.id);
 
 
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
 
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList
@@ -468,11 +460,9 @@ ATT
                             bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingMoved.id);
 
 
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
 
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+
+                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList

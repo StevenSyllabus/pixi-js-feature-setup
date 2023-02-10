@@ -28,6 +28,16 @@ function(instance, context) {
     instance.data.rectangleBeingMoved;
     instance.data.changeColor = false;
 
+    //grab the correct version parameter
+    instance.data.dynamicFetchParam;
+    instance.data.dynamicFetchParam = window.location.href;
+    instance.data.dynamicFetchParam = instance.data.dynamicFetchParam.split('/');
+    instance.data.dynamicFetchParam = instance.data.dynamicFetchParam[3] + `/`;
+    instance.data.dynamicFetchParam = instance.data.dynamicFetchParam.includes("version") ? instance.data.dynamicFetchParam : "";
+
+    console.log(` instance.data.dynamicFetchParam: ${instance.data.dynamicFetchParam}`)
+
+
 
 
 

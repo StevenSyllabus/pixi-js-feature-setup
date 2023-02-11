@@ -50,8 +50,8 @@ let inputMode = InputModeEnum.create;
 let dragController = null;
 // Active shown controls (can be shown both or one hovered / active)
 let controls = [];
+
 //seleted rectangle
-let selectedRectangle = PIXI.Graphics;
 
 //create a proxy variable to handle updates to the certain data. Proxys are a way to intercept and handle data changes. the set function is called when the data is changed. This is a way to handle data changes in a more controlled way.
 
@@ -92,10 +92,11 @@ const proxyVariables = new Proxy(
                 let height = child.height - borderWidth;
                 let width = child.width - borderWidth;
                 child.isHighlighted = true;
+                child.cursor = "move";
 
                 //clear the drawing, and redraw the square with the highlight color
                 child.clear();
-                child.beginFill(highlightColorAsHex, 0.5);
+                child.beginFill(highlightColorAsHex, 0.07);
                 child.lineStyle(1, 0x000000, 1);
 
                 //we minus 1 to account for the border. Theres a slight increase
@@ -119,6 +120,7 @@ const proxyVariables = new Proxy(
             child.isSelected = false;
             child.children.forEach((child: PIXI.Graphics) => {
               child.isHighlighted = false;
+              child.cursor = "pointer";
               let height = child.height - 1;
               let width = child.width - 1;
               let color = child.labelColor;
@@ -162,7 +164,7 @@ app.stage.addChild(mainContainer);
 ele.appendChild(app.view);
 
 const screenshot = PIXI.Texture.fromURL(
-  `${imgixBaseURL}https://dd7tel2830j4w.cloudfront.net/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=${1000}px`
+  `${imgixBaseURL}https://s3.amazonaws.com/appforest_uf/d110/f1667856692397x548178556679867840/d04b59ce92d6c0885e8eea753a9283e72c1e0f97d9c6c56094f211a6abbdefb2?w=1000`
 ).then((texture) => {
   console.log(`finished the texture`);
   console.log(texture);
@@ -485,38 +487,40 @@ const createExistingRect = function (
   createdRectangle.name = name;
   createdRectangle.id = uniqueID;
   createdRectangle.labelID = labelID;
-  createdRectangle.intialScale = 1;
   createdRectangle.cursor = "pointer";
   createdRectangle.addEventListener("pointermove", (event) => {
-    if (inputMode === InputModeEnum.scale) {
-      return;
-    }
-    if (inputMode === InputModeEnum.create) {
-      createdRectangle.cursor = "crosshair";
-      return;
-    }
     inputMode = InputModeEnum.select;
     const x = event.global.x - mainContainer.x;
     const y = event.global.y - mainContainer.y;
-    console.log(createdRectangle);
-    console.log(`the event global`, x, y);
-    console.log(`the event`, event.target.x, event.target.y);
-    console.log(`the event height`, event.target.width, event.target.height);
+    console.log(`hit`, rectContainer.scale);
+    let rectScaledWidth = createdRectangle.width * rectContainer.scale.x;
+    let rectScaledHeight = createdRectangle.height * rectContainer.scale.y;
+    let rectScaledX = createdRectangle.x * rectContainer.scale.x;
+    let rectScaledY = createdRectangle.y * rectContainer.scale.y;
+    console.log(`hit rectangle x`, event.target.x);
+    console.log(`hit rectangle y`, event.target.y);
+    console.log(
+      `hit rectangle scaled x`,
+      event.target.x * rectContainer.scale.x
+    );
 
     if (
-      x >= event.target.x + event.target.width - 20 &&
-      y >= event.target.y + event.target.height - 20 &&
-      proxyVariables.selectedRectangle === createdRectangle
+      x >= rectScaledX + rectScaledWidth - 10 &&
+      y >= rectScaledY + rectScaledHeight - 10 &&
+      createdRectangle.isHighlighted
     ) {
       console.log(
         "The mouse is in the bottom right corner and a rectangle is selected"
       );
-      event.target.cursor = "nwse-resize";
+      if (event.target.cursor !== "nwse-resize") {
+        event.target.cursor = "nwse-resize";
+      }
+
       inputMode = InputModeEnum.scale;
-    } else if (proxyVariables.selectedRectangle === createdRectangle) {
-      event.target.cursor = "move";
-    } else {
-      event.target.cursor = "pointer";
+    } else if (createdRectangle.isHighlighted) {
+      if (event.target.cursor !== "move") {
+        event.target.cursor = "move";
+      }
     }
   });
 
@@ -542,11 +546,14 @@ const createExistingRect = function (
   // make it hoverable
   createdRectangle.interactive = true;
 
-  createdRectangle.isOver = false;
   // remove it from current ceration and chose new color for next one
   addLabel(createdRectangle);
   console.log("currentRect that im testing", createdRectangle);
   createdRectangle.intialScale = app.view.width / intialWebpageWidth;
+  rectContainer.intialScale = app.view.width / intialWebpageWidth;
+  console.log(
+    `Created shape the intial scale is: ${createdRectangle.intialScale}`
+  );
 
   currentRectangle = null;
 };
@@ -751,13 +758,9 @@ const moveRectangle = function (resizeRectange, dragController) {
     dragController.position.x - resizeRectange.width,
     dragController.position.y
   );
-  let startPositionController = new PIXI.Point(
-    dragController.position.x - 18,
-    dragController.position.y + 23
-  );
+
   // we just move the start position
   resizeRectange.position.copyFrom(startPosition);
-  dragController.position.copyFrom(startPositionController);
 };
 const selectRectangle = function (rectangle) {
   console.log(`selectedRectangle`, rectangle);
@@ -842,10 +845,7 @@ mainContainer.on("pointerdown", (e) => {
 
     logging ? console.log("pointerdown", startPosition) : null;
   }
-  // if (inputMode == InputModeEnum.select) {
-  //   //PLACEHOLDER for select function
-  //   selectRectangle(e.target);
-  // }
+
   if (inputMode == InputModeEnum.move) {
   }
 });
@@ -853,6 +853,15 @@ mainContainer.on("pointerdown", (e) => {
 mainContainer.on("pointermove", (e) => {
   e.stopPropagation();
   console.log(`mainContainer pointermove`);
+  console.log(`mainContainer target`, e.target == mainContainer);
+  inputMode = InputModeEnum.create;
+
+  if (e.target == mainContainer) {
+  } else {
+    if (e.target.isHighlighted) {
+      inputMode = InputModeEnum.move;
+    } else inputMode = InputModeEnum.select;
+  }
 
   for (let property in InputModeEnum) {
     if (InputModeEnum[property] == inputMode) {
@@ -863,7 +872,7 @@ mainContainer.on("pointermove", (e) => {
   console.log(`currentTarget`, e.currentTarget.children);
   // Do this routine only if in create mode and have started creation
   // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
-  if (inputMode == InputModeEnum.create && startPosition) {
+  if (startPosition) {
     // get new global position from event
     let currentPosition = e.global;
     let { start, size } = getStartAndSize(

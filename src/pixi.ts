@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { FederatedPointerEvent } from "pixi.js";
 import { DAS, att, colors } from "./test-data";
 
 // this is the same as importing/adding a script https://pixijs.download/v7.1.0/pixi.js equivalent of <script src =""></script>
@@ -50,8 +51,38 @@ let inputMode = InputModeEnum.create;
 let dragController = null;
 // Active shown controls (can be shown both or one hovered / active)
 let controls = [];
+interface MovingRectangle {
+  graphic: PIXI.Graphics | null;
+  relativeMouseX: number | null;
+  relativeMouseY: number | null;
+}
+interface resizingRectangle {
+  graphic: PIXI.Graphics | null;
+  relativeMouseX: number | null;
+  relativeMouseY: number | null;
+  startMouseX: number | null;
+  startMouseY: number | null;
+  startWidth: number | null;
+  startHeight: number | null;
+  startingPosition: { x: number; y: number } | null;
+}
 
-//seleted rectangle
+let movingRectangle: MovingRectangle = {
+  graphic: null,
+  relativeMouseX: null,
+  relativeMouseY: null,
+};
+
+let resizingRectangle: resizingRectangle = {
+  graphic: null,
+  relativeMouseX: null,
+  relativeMouseY: null,
+  startMouseX: null,
+  startMouseY: null,
+  startWidth: null,
+  startHeight: null,
+  startingPosition: null,
+};
 
 //create a proxy variable to handle updates to the certain data. Proxys are a way to intercept and handle data changes. the set function is called when the data is changed. This is a way to handle data changes in a more controlled way.
 
@@ -489,36 +520,30 @@ const createExistingRect = function (
   createdRectangle.labelID = labelID;
   createdRectangle.cursor = "pointer";
   createdRectangle.addEventListener("pointermove", (event) => {
-    inputMode = InputModeEnum.select;
     const x = event.global.x - mainContainer.x;
     const y = event.global.y - mainContainer.y;
-    console.log(`hit`, rectContainer.scale);
     let rectScaledWidth = createdRectangle.width * rectContainer.scale.x;
     let rectScaledHeight = createdRectangle.height * rectContainer.scale.y;
     let rectScaledX = createdRectangle.x * rectContainer.scale.x;
     let rectScaledY = createdRectangle.y * rectContainer.scale.y;
-    console.log(`hit rectangle x`, event.target.x);
-    console.log(`hit rectangle y`, event.target.y);
-    console.log(
-      `hit rectangle scaled x`,
-      event.target.x * rectContainer.scale.x
-    );
-
-    if (
+    const isInBottomRightCorner =
       x >= rectScaledX + rectScaledWidth - 10 &&
-      y >= rectScaledY + rectScaledHeight - 10 &&
-      createdRectangle.isHighlighted
-    ) {
-      console.log(
-        "The mouse is in the bottom right corner and a rectangle is selected"
-      );
+      y >= rectScaledY + rectScaledHeight - 10;
+    console.log(`isInBottomRightCorner: ${isInBottomRightCorner}`);
+
+    if (!createdRectangle.isHighlighted) {
+      inputMode = InputModeEnum.select;
+    }
+
+    if (isInBottomRightCorner && createdRectangle.isHighlighted) {
+      inputMode = InputModeEnum.scale;
       if (event.target.cursor !== "nwse-resize") {
         event.target.cursor = "nwse-resize";
+        console.log(`resize`);
       }
-
-      inputMode = InputModeEnum.scale;
-    } else if (createdRectangle.isHighlighted) {
+    } else if (createdRectangle.isHighlighted && !isInBottomRightCorner) {
       if (event.target.cursor !== "move") {
+        inputMode = InputModeEnum.move;
         event.target.cursor = "move";
       }
     }
@@ -528,18 +553,68 @@ const createExistingRect = function (
   createdRectangle.position.copyFrom(
     new PIXI.Point(createCoord.startRectX, createCoord.startRectY)
   );
-  createdRectangle.addEventListener("pointerdown", (event) => {
-    event.stopPropagation();
-    const x = event.global.x - mainContainer.x;
-    const y = event.global.y - mainContainer.y;
+  createdRectangle.addEventListener(
+    "pointerdown",
+    (event: FederatedPointerEvent) => {
+      event.stopPropagation();
+      const x = event.global.x - mainContainer.x;
+      const y = event.global.y - mainContainer.y;
+      let rectScaledWidth = createdRectangle.width * rectContainer.scale.x;
+      let rectScaledHeight = createdRectangle.height * rectContainer.scale.y;
+      let rectScaledX = createdRectangle.x * rectContainer.scale.x;
+      let rectScaledY = createdRectangle.y * rectContainer.scale.y;
+      const isInBottomRightCorner =
+        x >= rectScaledX + rectScaledWidth - 10 &&
+        y >= rectScaledY + rectScaledHeight - 10;
+      console.log(`isInBottomRightCorner: ${isInBottomRightCorner}`);
+      //calculate the current mouse position relative to the movingRectangles intial click position itself
+      //this is so that the rectangle will move with the mouse, and not jump to the mouse position
+      //this is also so that the rectangle will move with the mouse, and not jump to the mouse position
 
-    if (event.target === proxyVariables.selectedRectangle) {
+      if (event.target.isHighlighted && !isInBottomRightCorner) {
+        console.log(`event`, event);
+        inputMode = InputModeEnum.move;
+
+        const targetAsGraphics = event.target as PIXI.Graphics;
+
+        //get the start position of the rectangle
+        startPosition = event.target.position;
+
+        movingRectangle.graphic = targetAsGraphics;
+        //store the mouse position relative to the rectangle click position
+        //this is so that the rectangle will move with the mouse, and not jump to the mouse position
+        //clicked in the world at 500 subtractr the start position of the rectangle at 100 -- we clicked 400 px in the rectangle
+        movingRectangle.relativeMouseX =
+          event.data.global.x - startPosition.x - mainContainer.x;
+        movingRectangle.relativeMouseY =
+          event.data.global.y - startPosition.y - mainContainer.y;
+        movingRectangle.isMoving = true;
+        console.log(`movingRectangle`, movingRectangle);
+      } else if (event.target.isHighlighted && isInBottomRightCorner) {
+        startPosition = event.target.position;
+        console.log(`we started`, startPosition, inputMode);
+        inputMode = InputModeEnum.scale;
+        resizingRectangle.graphic = event.target;
+        resizingRectangle.graphic.isResizing = true;
+        resizingRectangle.relativeMouseX =
+          event.data.global.x - startPosition.x - mainContainer.x;
+        resizingRectangle.relativeMouseY =
+          event.data.global.y - startPosition.y - mainContainer.y;
+        resizingRectangle.startMouseX = event.data.global.x - mainContainer.x;
+        resizingRectangle.startMouseY = event.data.global.y - mainContainer.y;
+        resizingRectangle.startWidth = event.target.width;
+        resizingRectangle.startHeight = event.target.height;
+        resizingRectangle.startingPosition = event.target.position;
+        console.log(`resizingRectangle`, resizingRectangle);
+      }
+      if (event.target === proxyVariables.selectedRectangle) {
+      }
+
+      if (event.target !== proxyVariables.selectedRectangle) {
+        selectRectangle(event.target);
+      }
     }
-
-    if (event.target !== proxyVariables.selectedRectangle)
-      selectRectangle(event.target);
-    //check if the mouse is in the bottom right corner, and set the mouse cursor to nwse-resize
-  });
+  );
   //addLabel(currentRectangle);
   mainContainer.addChild(rectContainer);
   console.log(`the rectContainer is:`, rectContainer);
@@ -647,7 +722,6 @@ const removeIfUnused = function (control) {
 const onRectangleOut = function () {
   console.log(`onRectangleOut`);
   this.isOver = false;
-  inputMode = InputModeEnum.create;
   controls.forEach((control) => removeIfUnused(control));
 };
 
@@ -810,7 +884,6 @@ const onDragEnd = function (e) {
     dragController = null;
   }
   startPosition = null;
-  inputMode = InputModeEnum.create;
 };
 
 ///experimental
@@ -832,11 +905,16 @@ const bringShapeToFront = function (sprite) {
 };
 
 //add all main container event listeners
-mainContainer.on("pointerupoutside", (e) => onDragEnd(e));
+mainContainer.on("pointerupoutside", (e) => {
+  resizingRectangle.graphic = null;
+  movingRectangle.graphic = null;
+  startPosition = null;
+  console.log(`mainContainer pointerupoutside`, e.target);
+});
 mainContainer.on("pointerdown", (e) => {
   console.log(`mainContainer pointerdown`, e.target);
   // Initiate rect creation
-  console.log(inputMode);
+
   if (inputMode == InputModeEnum.create) {
     proxyVariables.selectedRectangle = null;
 
@@ -853,26 +931,58 @@ mainContainer.on("pointerdown", (e) => {
 mainContainer.on("pointermove", (e) => {
   e.stopPropagation();
   console.log(`mainContainer pointermove`);
-  console.log(`mainContainer target`, e.target == mainContainer);
-  inputMode = InputModeEnum.create;
-
-  if (e.target == mainContainer) {
-  } else {
-    if (e.target.isHighlighted) {
-      inputMode = InputModeEnum.move;
-    } else inputMode = InputModeEnum.select;
+  //set to create mode if we're not scaling or moving
+  if (
+    e.target == mainContainer &&
+    !resizingRectangle.graphic &&
+    !movingRectangle.graphic
+  ) {
+    inputMode = InputModeEnum.create;
   }
 
-  for (let property in InputModeEnum) {
-    if (InputModeEnum[property] == inputMode) {
-      console.log(`property`, property);
-    }
+  //handle moving rectangle
+  if (movingRectangle?.graphic) {
+    const mouseX = e.global.x - mainContainer.x;
+    const mouseY = e.global.y - mainContainer.y;
+
+    movingRectangle.graphic.position.set(
+      mouseX - movingRectangle.relativeMouseX,
+      mouseY - movingRectangle.relativeMouseY
+    );
   }
-  console.log(`currentRectangle`, currentRectangle);
-  console.log(`currentTarget`, e.currentTarget.children);
-  // Do this routine only if in create mode and have started creation
-  // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
-  if (startPosition) {
+
+  //handle resizing rectangle
+  if (resizingRectangle?.graphic) {
+    console.log(`resizingRectangle on main container`, resizingRectangle);
+
+    const mouseX = e.global.x - mainContainer.x;
+    const mouseY = e.global.y - mainContainer.y;
+    let newWidth =
+      mouseX - resizingRectangle.startMouseX + resizingRectangle.startWidth;
+    let newHeight =
+      mouseY - resizingRectangle.startMouseY + resizingRectangle.startHeight;
+    console.log(`resizingRectangle`, resizingRectangle);
+    console.log(`resizingRectangle graphic`, resizingRectangle.graphic);
+
+    resizingRectangle.graphic
+      .clear()
+      .beginFill(highlightColorAsHex, 0.07)
+      .lineStyle({
+        color: 0x000000,
+        alpha: 1,
+        width: 1,
+      })
+      .drawRect(0, 0, newWidth, newHeight)
+      .endFill();
+  }
+
+  // Do this routine only if in create mode and no rectangle is being moved or resized
+  if (
+    inputMode == InputModeEnum.create &&
+    !movingRectangle.graphic &&
+    !resizingRectangle.graphic
+  ) {
+    console.log(`startPosition`, startPosition);
     // get new global position from event
     let currentPosition = e.global;
     let { start, size } = getStartAndSize(
@@ -901,11 +1011,11 @@ mainContainer.on("pointermove", (e) => {
       } else {
         drawRectangle(currentRectangle, currentPosition);
       }
-    } else {
-      if (currentRectangle) {
-        mainContainer.removeChild(currentRectangle);
-        currentRectangle = null;
-      }
+    }
+  }
+  for (let property in InputModeEnum) {
+    if (InputModeEnum[property] == inputMode) {
+      console.log(`inputMode`, property);
     }
   }
 });
@@ -914,6 +1024,8 @@ mainContainer.on("pointerup", (e) => {
   console.log(`mainContainer pointerup`);
   // Wrap up rect creation
   startPosition = null;
+  movingRectangle.graphic = null;
+  resizingRectangle.graphic = null;
   if (currentRectangle && currentRectangle.interactive == false) {
     currentRectangle.interactive = true;
     currentRectangle
@@ -922,11 +1034,7 @@ mainContainer.on("pointerup", (e) => {
       // Rectangle events.
       .on("pointerover", onRectangleOver)
       .on("pointerout", onRectangleOut);
-    console.log("currentRect", currentRectangle);
     currentRectangle.initialScale = app.view.width / intialWebpageWidth;
-    console.log("currentRect initialScale", currentRectangle.initialScale);
-    console.log("currentRectangle scale", currentRectangle);
   }
   currentRectangle = null;
-  onDragEnd(e);
 });

@@ -64,8 +64,8 @@ ATT
         console.log(`running das foreach`)
         console.log(`labels[index]`, labels[index])
         console.log(`labelColors[index]`, labelColors[index])
-        das.labelUniqueID = das.get('_id');
-        console.log(`the das uniqueID is`, das.labelUniqueID, `and the das attributeId is`, das.attributeId)
+        das.labelUniqueID = das.get('attribute')
+
         if (labels[index] && labelColors[index]) {
             das.attributeName = labels[index].get('name_text');
             das.attributeId = labels[index].get('_id');
@@ -314,6 +314,7 @@ ATT
                             instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
                             instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
                             instance.publishState("currently_selected_drawing", '')
+                            instance.data.proxyVariables.selectedRectangle = null;
 
                         }
                         if (instance.data.inputMode == instance.data.InputModeEnum.select) {

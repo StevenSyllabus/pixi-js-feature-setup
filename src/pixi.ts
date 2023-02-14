@@ -496,22 +496,14 @@ const createExistingRect = function (
   rectContainer.name = name;
   console.log(`the color is: ${color}`);
 
-  let createdRectangle = new PIXI.Graphics()
-    .beginFill("0x" + color, 1)
-    // returns initial graphis so we can daizy chaing
-
-    //create rect in orgin for calculation simplification
-    .drawRect(0, 0, createCoord.width, createCoord.height)
-    .endFill();
-  rectContainer.addChild(createdRectangle);
-  createdRectangle.beginHole();
-  createdRectangle.drawRect(
-    5,
-    5,
-    createCoord.width - 10,
-    createCoord.height - 10
+  let createdRectangle = createBorderedRectangle(
+    0,
+    0,
+    createCoord.width,
+    createCoord.height,
+    color
   );
-  createdRectangle.endHole();
+  rectContainer.addChild(createdRectangle);
 
   createdRectangle.labelColor = "0x" + color;
   createdRectangle.oldColor = "0x" + color;
@@ -1061,3 +1053,20 @@ mainContainer.on("pointerup", (e) => {
   }
   currentRectangle = null;
 });
+
+const createBorderedRectangle = function (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: string
+) {
+  let rectangle = new PIXI.Graphics()
+    .beginFill("0x" + color, 1)
+    .drawRect(x, y, width, height)
+    .endFill()
+    .beginHole()
+    .drawRect(5, 5, width - 10, height - 10)
+    .endHole();
+  return rectangle;
+};

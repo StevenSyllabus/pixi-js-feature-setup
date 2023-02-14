@@ -519,6 +519,16 @@ const createExistingRect = function (
   createdRectangle.id = uniqueID;
   createdRectangle.labelID = labelID;
   createdRectangle.cursor = "pointer";
+  createdRectangle.addEventListener("pointerout", (event) => {
+    if (
+      inputMode !== InputModeEnum.create &&
+      resizingRectangle.graphic === null &&
+      movingRectangle.graphic === null
+    ) {
+      console.log(`out`);
+      inputMode = InputModeEnum.select;
+    }
+  });
   createdRectangle.addEventListener("pointermove", (event) => {
     const x = event.global.x - mainContainer.x;
     const y = event.global.y - mainContainer.y;
@@ -1028,6 +1038,7 @@ mainContainer.on("pointerup", (e) => {
   resizingRectangle.graphic = null;
   if (currentRectangle && currentRectangle.interactive == false) {
     currentRectangle.interactive = true;
+    console.log(`currentRectangle`, currentRectangle);
     currentRectangle
       // Mouse & touch events are normalized into
       // the pointer* events for handling different
@@ -1035,6 +1046,18 @@ mainContainer.on("pointerup", (e) => {
       .on("pointerover", onRectangleOver)
       .on("pointerout", onRectangleOut);
     currentRectangle.initialScale = app.view.width / intialWebpageWidth;
+    currentRectangle.labelColor = "0x" + highlightColor;
+    currentRectangle.oldColor = highlightColor;
+    currentRectangle.name = "my new";
+    currentRectangle.label = addLabel(currentRectangle);
+    let createCoord = new PIXI.Point().copyFrom(currentRectangle.position);
+    createExistingRect(
+      createCoord,
+      currentRectangle.labelColor,
+      currentRectangle.name,
+      `sadasdsaasd1`,
+      currentRectangle.label
+    );
   }
   currentRectangle = null;
 });

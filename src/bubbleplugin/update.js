@@ -43,6 +43,7 @@ ATT
     instance.data.dasOrigin = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length());
     instance.data.highlightColor = properties.highlight_color; //yellow
     instance.data.highlightColorAlpha = properties.highlight_color_alpha;
+    instance.data.normalColorAlpha = properties.normal_color_alpha;
     instance.data.dragColor = properties.drag_color; //red
     instance.data.resizeColor = properties.resize_color;
     instance.data.changeColor = properties.changeColor;
@@ -183,7 +184,7 @@ ATT
     rects2[1] = new Array(100, 150, 250, 250, "0xDE3249", 4);
     //end test data
     instance.data.startX, instance.data.startY, instance.data.endX, instance.data.endY;
-    const mainContainer = instance.data.mainContainer
+    const mainContainer = instance.data.mainContainer;
 
 
 
@@ -212,9 +213,28 @@ ATT
         instance.data.mainElementObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 clearTimeout(instance.data.resizeTimer);
+
+                if (instance.data.resizeScroll) {
+                    var d = new Date();
+                    if ((instance.data.date) && (instance.data.date < d)) {
+                        instance.data.date = new Date(d.getTime() + 7000);
+                        instance.data.resizeScroll = ((instance.data.scrollPositionBefore + (instance.data.resizeScroll * 9)) / 10);
+                    }
+                    else {
+                        instance.data.resizeScroll = instance.data.scrollPositionBefore;
+                    }
+                } else {
+                    instance.data.resizeScroll = instance.data.scrollPositionBefore;
+                    instance.data.date = d;
+                }
+
+                console.log("instance.data.date", instance.data.date, d);
                 instance.data.resizeTimer = setTimeout(() => {
                     console.log(`We just resized after timeout`, entry.contentRect);
                     instance.data.app.resize();
+                    let newPosition = Math.abs(instance.data.resizeScroll) * (instance.data.mainContainer.height - instance.data.app.view.height);
+                    instance.data.mainContainer.position.y = -newPosition;
+                    console.log("resize-instance.data.scrollPositionBefore", instance.data.scrollPositionBefore, instance.data.resizeScroll, `instance.data.mainContainer.height instance.data.app.view.height`, instance.data.mainContainer.height, instance.data.app.view.height, "newPosition", newPosition);
                     if (instance.data.scrollBar) {
 
                     }

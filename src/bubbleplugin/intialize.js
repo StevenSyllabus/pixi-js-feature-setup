@@ -14,6 +14,7 @@ function(instance, context) {
     instance.data.labelFontSize = "20";
     instance.data.labelFontColor = "000000";
     instance.data.highlightColorAlpha = ".3";
+    instance.data.normalColorAlpha = ".3";
     instance.data.dasOrigin;
     instance.data.addedMainContainerEventListeners = false;
     instance.data.createdScrollBar = false;
@@ -22,6 +23,7 @@ function(instance, context) {
     instance.data.maxScroll;
     instance.data.scrollBarLastY;
     instance.data.scrollBarLastTop;
+    instance.data.scrollPositionBefore = 0;
     instance.data.accountWebPageID;
     instance.data.scalingShape;
     instance.data.rectangleBeingResized;
@@ -110,6 +112,7 @@ function(instance, context) {
         div
     ) {
         const scrollPercent = -instance.data.mainContainer.position.y / instance.data.maxScroll;
+        instance.data.scrollPositionBefore = scrollPercent;
         console.log(`scrollPercent: ${scrollPercent}`);
 
         const scrollbarHeight =
@@ -137,6 +140,7 @@ function(instance, context) {
 
         scrollbar.addEventListener("pointerdown", (e) => {
             const scrollPercent = -mainContainer.position.y / scrollbar.maxScroll;
+            instance.data.scrollPositionBefore = scrollPercent;
             const scrollbarHeight =
                 pixiApp.view.height * (pixiApp.view.height / mainContainer.height);
             const scrollbarY = scrollPercent * (pixiApp.view.height - scrollbarHeight);
@@ -178,6 +182,7 @@ function(instance, context) {
     instance.data.scrollBarWindowPointerMove = function (event) {
         if (instance.data.ele.pressed) {
             const scrollPercent = -instance.data.mainContainer.position.y / instance.data.maxScroll;
+            instance.data.scrollPositionBefore = scrollPercent;
             console.log(`scrollPercent: ${scrollPercent}`);
 
             const scrollbarHeight =
@@ -228,6 +233,7 @@ function(instance, context) {
 
         // Update the scrollbar position and size based on the container's scroll position
         const scrollPercent = -instance.data.mainContainer.position.y / maxScroll;
+        instance.data.scrollPositionBefore = scrollPercent;
         const scrollbarHeight =
             instance.data.app.view.height * (instance.data.app.view.height / instance.data.mainContainer.height);
         const scrollbarY = scrollPercent * (instance.data.app.view.height - scrollbarHeight);
@@ -257,6 +263,7 @@ function(instance, context) {
         scrollbar.maxScroll = mainContainer.height - pixiApp.view.height;
 
         const scrollPercent = -mainContainer.position.y / scrollbar.maxScroll;
+        instance.data.scrollPositionBefore = scrollPercent;
         scrollbar.scrollPercent = scrollPercent;
         console.log(`scrollPercent: ${scrollPercent}`);
         const scrollbarHeight =
@@ -611,7 +618,7 @@ function(instance, context) {
             color = instance.data.highlightColor;
         }
         instance.data.currentRectangle = new PIXI.Graphics()
-            .beginFill("0x" + color, .5)
+            .beginFill("0x" + color, instance.data.normalColorAlpha)
             // returns initial graphics
             .lineStyle({
                 color: 0x111111,

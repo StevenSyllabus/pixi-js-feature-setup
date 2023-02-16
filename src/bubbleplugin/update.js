@@ -315,6 +315,8 @@ ATT
                             instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
                             instance.publishState("currently_selected_drawing", '')
                             instance.data.proxyVariables.selectedRectangle = null;
+                            instance.data.proxyVariables.rectangleBeingMoved = null;
+
 
                         }
                         if (instance.data.inputMode == instance.data.InputModeEnum.select) {
@@ -322,7 +324,12 @@ ATT
                             instance.data.selectRect(e.target);
                         }
                     });
+                    mainContainer.addEventListener('pointerupoutside', (e) => {
+
+                        console.log("pointerupoutside", e)
+                    }, { passive: true });
                     mainContainer.on('pointermove', (e) => {
+
                         // Do this routine only if in create mode and have started creation
                         // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
                         if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition) {
@@ -358,8 +365,19 @@ ATT
                                 }
                             }
                         }
+                        if (instance.data.proxyVariables.rectangleBeingMoved) {
+                            console.log(`we're moving`)
+                            const mouseX = e.global.x - instance.data.mainContainer.x;
+                            const mouseY = e.global.y - instance.data.mainContainer.y;
+                            instance.data.proxyVariables.rectangleBeingMoved.position.set(
+                                mouseX - instance.data.proxyVariables.rectangleBeingMoved.relativeMouseX,
+                                mouseY - instance.data.proxyVariables.rectangleBeingMoved.relativeMouseY
+                            );
+
+                        }
                     });
                     mainContainer.on('pointerup', (e) => {
+                        console.log(`main container pointer up`)
 
                         // Wrap up rect creation
                         instance.data.startPosition = null
@@ -461,10 +479,15 @@ ATT
 
 
                             instance.data.rectangleBeingResized = null;
+                            instance.data.proxyVariables.rectangleBeingResized = null;
+                            instance.data.rectangleBeingMoved = null;
+                            instance.data.proxyVariables.rectangleBeingMoved = null;
+
                         }
 
-                        if (instance.data.rectangleBeingMoved) {
-                            console.log(`the rectangle being moved is`, instance.data.rectangleBeingMoved)
+                        if (instance.data.proxyVariables?.rectangleBeingMoved) {
+                            console.log(`the rectangle. maincontainer pointerup`)
+                            console.log(`the rectangle being moved is`, instance.data.proxyVariables.rectangleBeingMoved)
 
 
                             let headersList = {
@@ -499,13 +522,29 @@ ATT
 
                             instance.data.rectangleBeingMoved = null;
                         }
-
+                        instance.data.proxyVariables.rectangleBeingMoved = null;
+                        instance.data.movingRectangle = null;
+                        instance.data.rectangleBeingResized = null;
+                        instance.data.proxyVariables.rectangleBeingResized = null;
 
 
                         instance.data.onDragEndNew()
                     });
                     //load our data
                     mainContainer.on('pointerupoutside', instance.data.onDragEndNew);
+                    mainContainer.addEventListener("pointermove", e => {
+
+
+
+                        if (instance.data.proxyVariables.inputMode !== instance.data.InputModeEnum.create && !instance.data.proxyVariables.rectangleBeingMoved) {
+                            console.log(`we're not in create mode`)
+                            instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.create
+                            instance.data.inputMode = instance.data.InputModeEnum.create
+                            mainContainer.cursor = "crosshair"
+
+                        }
+                    }, { passive: true })
+
                     mainContainer.interactive = true;
                     mainContainer.hitArea = mainContainer.screen;
                     instance.data.addedMainContainerEventListeners = true;

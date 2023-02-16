@@ -1,6 +1,18 @@
 function(instance, properties, context) {
     console.log("update is running", properties);
     instance.data.accountWebPageID = properties.account_webpage?.get(`_id`);
+
+    if (properties.label_to_highlight?.get(`_id`) && instance.data.proxyVariables.labelToHighlight !== properties.label_to_highlight.get(`_id`)) {
+
+        instance.data.proxyVariables.labelToHighlight = properties.label_to_highlight.get(`_id`);
+
+        console.log(`label to highlight`, instance.data.proxyVariables.labelToHighlight)
+    }
+    else {
+        console.log(`no label to highlight`)
+        instance.data.proxyVariables.labelToHighlight = null;
+
+    }
     //properties.attributes
     //properties.attributes
     /*
@@ -375,6 +387,42 @@ ATT
                             );
 
                         }
+                        if (instance.data.proxyVariables.rectangleBeingResized) {
+                            console.log(`we're resizing`)
+                            console.log(`we're resizing rect:`, instance.data.proxyVariables.rectangleBeingResized)
+
+                            //just grab the rectangle we're resizing for shorter syntax
+                            const resizingRectangle = instance.data.proxyVariables.rectangleBeingResized;
+                            const mouseX = e.global.x - instance.data.mainContainer.x;
+                            const mouseY = e.global.y - instance.data.mainContainer.y;
+                            //calculate the new size based on mouse position and starting position
+                            let newWidth =
+                                mouseX - resizingRectangle.startMouseX + resizingRectangle.originalResizeWidth;
+                            let newHeight =
+                                mouseY - resizingRectangle.startMouseY + resizingRectangle.originalResizeHeight;
+
+                            console.log(`rectCreated-resize newheight calcs:`, mouseY, resizingRectangle.startMouseY, resizingRectangle.originalResizeHeight)
+                            console.log(`rectCreated-resize`, resizingRectangle)
+                            console.log(`rectCreated-resize mouseX and Y`, resizingRectangle.startMouseX, resizingRectangle.startMouseY)
+                            console.log(`rectCreated-resize relativeMouseX and Y`, resizingRectangle.relativeMouseX, resizingRectangle.relativeMouseY)
+                            console.log(`rectCreated-resize originalResizeWidth and Height`, resizingRectangle.originalResizeWidth, resizingRectangle.originalResizeHeight)
+
+                            console.log(`rectCreated-resize newheight and width`, newHeight, newWidth)
+
+
+                            resizingRectangle
+                                .clear()
+                                .beginFill(instance.data.highlightColorAsHex, 0.07)
+                                .lineStyle({
+                                    color: 0x000000,
+                                    alpha: 1,
+                                    width: 1,
+                                })
+                                .drawRect(0, 0, newWidth, newHeight)
+                                .endFill();
+                            console.log(`rectCreated-resize graphic`, resizingRectangle.width, resizingRectangle.height);
+
+                        }
                     });
                     mainContainer.on('pointerup', (e) => {
                         console.log(`main container pointer up`)
@@ -448,33 +496,7 @@ ATT
                         if (instance.data.rectangleBeingResized) {
                             console.log(`the rectangle being resize is`, instance.data.rectangleBeingResized)
                             //update the shape in the database
-                            let headersList = {
-                                "Accept": "*/*",
-                            }
-                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
 
-                            let bodyContent = new FormData();
-                            bodyContent.append("x", instance.data.rectangleBeingResized.position.x);
-                            bodyContent.append("y", instance.data.rectangleBeingResized.position.y);
-                            bodyContent.append("width", instance.data.rectangleBeingResized.width);
-                            bodyContent.append("height", instance.data.rectangleBeingResized.height);
-                            bodyContent.append("initial_drawn_scale", drawnScale)
-                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingResized.id);
-
-
-
-                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
-                                method: "POST",
-                                body: bodyContent,
-                                headers: headersList
-                            }).then(response => response.json())
-                                .then(result => {
-                                    let newID = result.response.drawn_attribute_snippet._id;
-                                    console.log(`the new id`, newID);
-                                    console.log(result.response);
-                                    console.log(result.response.drawn_attribute_snippet);
-                                    console.log(result.response.drawn_attribute_snippet._id);
-                                })
 
 
 

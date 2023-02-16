@@ -30,6 +30,7 @@ function(instance, context) {
     instance.data.rectangleBeingResized;
     instance.data.rectangleBeingMoved;
     instance.data.changeColor = false;
+
     // Input modes for input
     instance.data.InputModeEnum = {
         create: 1,
@@ -66,6 +67,7 @@ function(instance, context) {
         inputMode: instance.data.InputModeEnum.create,
         rectangleBeingResized: null,
         rectangleBeingMoved: null,
+        labelToHighlight: null,
 
     }, {
         set: function (obj, prop, value) {
@@ -203,6 +205,59 @@ function(instance, context) {
                 else {
                 }
             }
+            if (prop == "labelToHighlight") {
+                if (value) {
+                    console.log(`labelToHighlight:`, value)
+
+                    instance.data.mainContainer.children.forEach((child) => {
+                        if (child.name !== "webpage") {
+                            //check if the current rectangle selected has the same labelUniqueID as the child we're looping through
+                            if (child.labelUniqueID === value) {
+                                console.log(`highlight-highlight`)
+                                //if it does, we set the child to be highlighted and selected
+                                //calculate the width and height of the rectangle including the border
+                                let borderWidth = child.line.width;
+                                let height = child.height - borderWidth;
+                                let width = child.width - borderWidth;
+                                //the rectangle is highlighted - so it becomes movable
+                                child.cursor = "move";
+
+
+
+                                //clear the drawing, and redraw the square with the highlight color
+                                child.clear();
+                                child.beginFill(instance.data.highlightColorAsHex, instance.data.highlightColorAlpha);
+                                child.lineStyle(1, 0x000000, 1);
+
+                                //we minus 1 to account for the border. Theres a slight increase
+                                child.drawRect(0, 0, width, height);
+                                child.endFill();
+                                child.isHighlighted = true;
+                            }
+                            else if (child.labelUniqueID !== value && child.isHighlighted) {
+                                console.log(`highlight-unhighlight`)
+                                child.isHighlighted = false;
+                                child.isSelected = false;
+                                child.cursor = "pointer";
+                                let height = child.height - 1;
+                                let width = child.width - 1;
+                                let color = `0x` + child.labelColor;
+                                child
+                                    .clear()
+                                    .beginFill(color, 1)
+                                    .drawRect(0, 0, width, height)
+                                    .endFill()
+                                    .beginHole()
+                                    .drawRect(5, 5, width - 10, height - 10)
+                                    .endHole();
+                            }
+                        }
+                    });
+                }
+                else {
+                }
+            }
+
 
 
 
@@ -701,9 +756,20 @@ function(instance, context) {
         if (color == null) {
             color = instance.data.highlightColor;
         }
+
         //store the rectangle in a variable locally
         let rectCreated;
-        rectCreated = instance.data.createBorderedRectangle(0, 0, createCoord.width, createCoord.height, color);
+
+        if (labelID !== instance.data.proxyVariables.labelToHighlight) {
+            rectCreated = instance.data.createBorderedRectangle(0, 0, createCoord.width, createCoord.height, color);
+        }
+
+        if (labelID === instance.data.proxyVariables.labelToHighlight) {
+            console.log(`the rect is highlightable`, labelID)
+            rectCreated = instance.data.createHighlightedRectangle(0, 0, createCoord.width, createCoord.height)
+
+
+        }
 
 
         rectCreated.labelColor = color;
@@ -711,6 +777,8 @@ function(instance, context) {
         rectCreated.name = name;
         rectCreated.id = id;
         rectCreated.labelUniqueID = labelID;
+
+
 
         // then we move it to final position
         rectCreated.position.copyFrom(
@@ -736,7 +804,7 @@ function(instance, context) {
                 x >= rectScaledX + rectScaledWidth - 20 &&
                 y >= rectScaledY + rectScaledHeight - 20;
 
-            if (!rectCreated.isHighlighted) {
+            if (!rectCreated.isHighlighted && !instance.data.proxyVariables.rectangleBeingResized && !instance.data.proxyVariables.rectangleBeingMoved) {
                 if (instance.data.proxyVariables.inputMode != instance.data.InputModeEnum.select) {
                     instance.data.inputMode = instance.data.InputModeEnum.select;
                     instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.select;
@@ -809,9 +877,48 @@ function(instance, context) {
                 rectCreated.isMoving = true;
                 console.log(`rectCreated-move`, rectCreated)
             }
+
+
+            //trigger the resize start if the rectangle is highlighted and in the bottom right corner
+            if (rectCreated.isHighlighted && isInBottomRightCorner) {
+
+                if (instance.data.proxyVariables.inputMode !== instance.data.InputModeEnum.resize) {
+                    instance.data.inputMode = instance.data.InputModeEnum.resize;
+                    instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.resize;
+                    rectCreated.cursor = "nwse-resize";
+                }
+                instance.data.proxyVariables.rectangleBeingResized = rectCreated;
+
+                //get the start width and height of the rectangle
+                let startWidth = rectCreated.width;
+                let startHeight = rectCreated.height;
+
+                //store the mouse position relative to the rectangle resize position
+                //this is so that the rectangle will resize with the mouse, and not jump to the mouse position
+                //clicked in the world at 500 subtractr the start position of the rectangle at 100 -- we clicked 400 px in the rectangle
+                rectCreated.relativeMouseX =
+                    e.data.global.x - (startPosition.x + startWidth) - instance.data.mainContainer.x;
+                rectCreated.relativeMouseY =
+                    e.data.global.y - (startPosition.y + startHeight) - instance.data.mainContainer.y;
+
+                //store the original size of the rectangle so we know if we need to push an update to the server
+                rectCreated.originalResizeWidth = startWidth;
+                rectCreated.originalResizeHeight = startHeight;
+                rectCreated.startMouseX = e.data.global.x - instance.data.mainContainer.x;
+                rectCreated.startMouseY = e.data.global.y - instance.data.mainContainer.y;
+
+                rectCreated.isResizing = true;
+                instance.data.proxyVariables.rectangleBeingResized = rectCreated;
+                console.log(`rectCreated-resize`, rectCreated)
+                console.log(`rectCreated-resize mouseX and Y`, rectCreated.startMouseX, rectCreated.startMouseY)
+                console.log(`rectCreated-resize relativeMouseX and Y`, rectCreated.relativeMouseX, rectCreated.relativeMouseY)
+                console.log(`rectCreated-resize originalResizeWidth and Height`, rectCreated.originalResizeWidth, rectCreated.originalResizeHeight)
+
+            }
         });
         rectCreated.addEventListener("pointerup", e => {
             e.stopPropagation();
+            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
 
             if (instance.data.proxyVariables.rectangleBeingMoved) {
 
@@ -823,44 +930,26 @@ function(instance, context) {
                 let rectX = rectbeingMoved.x;
                 let rectY = rectbeingMoved.y;
 
+
+
                 //check if the rectangle has moved
                 if (rectbeingMoved.originalMovePositionX != rectX || rectbeingMoved.originalMovePositionY != rectY) {
 
+                    //if it has, update the rectangle's position in the database
+                    instance.data.updateDrawnLabel(instance.data.proxyVariables.rectangleBeingMoved.x, instance.data.proxyVariables.rectangleBeingMoved.y, instance.data.proxyVariables.rectangleBeingMoved.width, instance.data.proxyVariables.rectangleBeingMoved.height, drawnScale, instance.data.proxyVariables.rectangleBeingMoved.id)
 
 
 
-                    let headersList = {
-                        "Accept": "*/*",
-                    }
-                    let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
-
-                    let bodyContent = new FormData();
-                    bodyContent.append("x", rectbeingMoved.position.x);
-                    bodyContent.append("y", rectbeingMoved.position.y);
-                    bodyContent.append("width", rectbeingMoved.width);
-                    bodyContent.append("height", rectbeingMoved.height);
-                    bodyContent.append("initial_drawn_scale", drawnScale)
-                    bodyContent.append("drawn_label_snippet", rectbeingMoved.id);
-
-
-
-
-                    fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
-                        method: "POST",
-                        body: bodyContent,
-                        headers: headersList
-                    }).then(response => response.json())
-                        .then(result => {
-                            let newID = result.response.drawn_attribute_snippet._id;
-                            console.log(`the new id`, newID);
-                            console.log(result.response);
-                            console.log(result.response.drawn_attribute_snippet);
-                            console.log(result.response.drawn_attribute_snippet._id);
-                        })
                 }
 
                 instance.data.rectangleBeingMoved = null;
                 instance.data.proxyVariables.rectangleBeingMoved = null;
+            }
+
+            if (instance.data.proxyVariables.rectangleBeingResized) {
+                console.log(`the rectangle being resized is`, instance.data.proxyVariables.rectangleBeingResized)
+
+                instance.data.updateDrawnLabel(instance.data.proxyVariables.rectangleBeingResized.x, instance.data.proxyVariables.rectangleBeingResized.y, instance.data.proxyVariables.rectangleBeingResized.width, instance.data.proxyVariables.rectangleBeingResized.height, drawnScale, instance.data.proxyVariables.rectangleBeingResized.id)
             }
 
 
@@ -1136,6 +1225,64 @@ function(instance, context) {
             .endHole();
         return rectangle;
     };
+
+    instance.data.createHighlightedRectangle = function (
+        x, y, width, height) {
+        let rectangle = new PIXI.Graphics()
+            .beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
+            .lineStyle(1, 0x000000, 1)
+            .drawRect(x, y, width, height)
+            .endFill()
+
+
+
+        rectangle.isHighlighted = true;
+
+        return rectangle;
+
+
+    }
+
+    // this function runs a post call to our API to update the drawn label
+    //simply run this to update the drawn label in Bubble
+    instance.data.updateDrawnLabel = function (x, y, width, height, initial_drawn_scale, drawn_label_snippet) {
+        // Set the headers list
+        let headersList = {
+            "Accept": "*/*",
+        };
+        // Create a form data object
+        let bodyContent = new FormData();
+        // Append the parameters to the form
+        bodyContent.append("x", x);
+        bodyContent.append("y", y);
+        bodyContent.append("width", width);
+        bodyContent.append("height", height);
+        bodyContent.append("initial_drawn_scale", initial_drawn_scale)
+        bodyContent.append("drawn_label_snippet", drawn_label_snippet);
+
+        // Fetch the data from the API endpoint using POST method
+        fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
+            method: "POST",
+            body: bodyContent,
+            headers: headersList
+        }).then(response => response.json())
+            .then(result => {
+                // Get the new ID from the result
+                let newID = result.response.drawn_attribute_snippet._id;
+                // Log some information to the console
+                console.log(`the new id`, newID);
+                console.log(result.response);
+                console.log(result.response.drawn_attribute_snippet);
+                console.log(result.response.drawn_attribute_snippet._id);
+                return result
+            }).catch(error => {
+                console.log(error);
+                throw error
+            }
+            );
+    }
+
+    console.log(`instance.data.updateDrawnLabel`, instance.data.updateDrawnLabel)
 
 }
 

@@ -64,6 +64,8 @@ function(instance, context) {
     instance.data.proxyVariables = new Proxy({
         selectedRectangle: null,
         inputMode: instance.data.InputModeEnum.create,
+        rectangleBeingResized: null,
+        rectangleBeingMoved: null,
 
     }, {
         set: function (obj, prop, value) {
@@ -78,6 +80,10 @@ function(instance, context) {
                 //check if the value is not null and the value is not the same as the previous value
                 if (value && value !== previousValue) {
                     //loop through all of the containers on the main container (the squares)
+                    instance.publishState("currently_selected_drawing", value.id)
+                    setTimeout(() => {
+                        instance.triggerEvent("label_selected")
+                    }, 100)
                     instance.data.mainContainer.children.forEach((child) => {
                         console.log(`theChild`, child)
                         if (child.name !== "webpage") {
@@ -91,6 +97,8 @@ function(instance, context) {
                                 let width = child.width - borderWidth;
                                 //the rectangle is highlighted - so it becomes movable
                                 child.cursor = "move";
+
+
 
                                 //clear the drawing, and redraw the square with the highlight color
                                 child.clear();
@@ -154,20 +162,46 @@ function(instance, context) {
 
             }
             if (prop == "inputMode") {
-                console.log(`inputMode changed to ${value} `)
+                //check the current input mode
+                for (let property in instance.data.InputModeEnum) {
+                    if (instance.data.InputModeEnum[property] == value) {
+                        console.log(`inputMode changed to ${property} `)
+                    }
+                }
                 if (value == instance.data.InputModeEnum.create) {
                     instance.data.mainContainer.cursor = "crosshair"
                 }
                 if (value == instance.data.InputModeEnum.select) {
-                    console.log(`select mode`)
                     instance.data.mainContainer.children.forEach(child => {
 
                         child.cursor = "pointer"
 
                     })
                 }
+                if (value == instance.data.InputModeEnum.scale) {
+                    instance.data.mainContainer.cursor = "nwse-resize"
+                }
+                if (value == instance.data.InputModeEnum.move) {
+                    console.log(`inputMode: move mode`)
+                    instance.data.mainContainer.cursor = "move"
+                }
 
 
+
+            }
+            if (prop == "rectangleBeingResized") {
+                if (value) {
+                    console.log(`rectangleBeingResized:`, value)
+                }
+                else {
+                }
+            }
+            if (prop == "rectangleBeingMoved") {
+                if (value) {
+                    console.log(`rectangleBeingMoved:`, value)
+                }
+                else {
+                }
             }
 
 
@@ -466,55 +500,7 @@ function(instance, context) {
         //     console.log(pixiApp.view.width / webpageSprite.intialWidth);
         //   }, 100);
     };
-    const onDragStart = function (e, rectangle, rectangles) {
-        const mousePosition = e.data.global;
-        if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.labelColor); }
-        rectangle.interactive = true; // Make the rectangle interactive
-        rectangle.dragging = true;
-        if (rectangle.resizing) {
-            logResize ? console.log("resizing active", mousePosition) : null;
-            return;
-        }
-        logDrag ? console.log("mousePosition", mousePosition) : null;
-        logDrag
-            ? console.log("myRectanglePosition", rectangle.myRectanglePosition)
-            : null;
 
-        rectangle.draggingOffset = [
-            mousePosition.x - rectangle.myRectanglePosition[0],
-            mousePosition.y - rectangle.myRectanglePosition[1],
-        ];
-    };
-
-    const onDragEnd = function (e, rectangle, rectangles) {
-        //rectangle.selected = false;
-
-        if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.oldColor); }
-        rectangles.forEach((r) => (r.dragging = false));
-        rectangles.forEach((r) => (r.interactive = false));
-        logDrag
-            ? console.log(
-                "DragEnd,color,interactive,selected",
-                rectangle.labelColor,
-                rectangle.interactive,
-                rectangle.selected
-            )
-            : null;
-        rectangle.off("pointermove");
-    };
-
-    const onDragMove = function (e, rectangle, rectangles) {
-        //if (rectangle.dragging != true) return;
-        if (rectangle.dragging) {
-            rectangle.position.x += e.data.originalEvent.movementX;
-            rectangle.position.y += e.data.originalEvent.movementY;
-            rectangle.lastMoveX = rectangle.position.x;
-            rectangle.lastMoveY = rectangle.position.y;
-
-            logDrag ? console.log("onDragMove") : null;
-            if (instance.data.changeColor) { changeRectColor(rectangle, rectangle.labelColor); }
-        }
-    };
     const changeRectColor = function (sq, color) {
         logDrag ? console.log("changeColor") : null;
         const square = sq;
@@ -715,56 +701,200 @@ function(instance, context) {
         if (color == null) {
             color = instance.data.highlightColor;
         }
+        //store the rectangle in a variable locally
+        let rectCreated;
+        rectCreated = instance.data.createBorderedRectangle(0, 0, createCoord.width, createCoord.height, color);
 
-        instance.data.currentRectangle = instance.data.createBorderedRectangle(0, 0, createCoord.width, createCoord.height, color);
 
-        instance.data.currentRectangle.labelColor = color;
-        instance.data.currentRectangle.oldColor = color;
-        instance.data.currentRectangle.name = name;
-        instance.data.currentRectangle.id = id;
-        instance.data.currentRectangle.labelUniqueID = labelID;
+        rectCreated.labelColor = color;
+        rectCreated.oldColor = color;
+        rectCreated.name = name;
+        rectCreated.id = id;
+        rectCreated.labelUniqueID = labelID;
 
-        console.log(`the current rect data for id`, instance.data.currentRectangle);
         // then we move it to final position
-        instance.data.currentRectangle.position.copyFrom(
+        rectCreated.position.copyFrom(
             new PIXI.Point(createCoord.startRectX, createCoord.startRectY)
         );
         //addLabel(currentRectangle);
-        instance.data.mainContainer.addChild(instance.data.currentRectangle);
+        instance.data.mainContainer.addChild(rectCreated);
         // make it hoverable
-        instance.data.currentRectangle.interactive = true;
-        instance.data.currentRectangle
-            .on("pointerover", instance.data.onRectangleOver)
-            .on("pointerout", instance.data.onRectangleOut);
+        rectCreated.interactive = true;
+        console.log("currentRectangle", rectCreated);
+
+
+        rectCreated.addEventListener("pointermove", event => {
+
+            console.log(`we just hovered over a rectangle`, rectCreated)
+            const x = event.global.x - instance.data.mainContainer.x;
+            const y = event.global.y - instance.data.mainContainer.y;
+            let rectScaledWidth = rectCreated.width
+            let rectScaledHeight = rectCreated.height
+            let rectScaledX = rectCreated.x
+            let rectScaledY = rectCreated.y
+            const isInBottomRightCorner =
+                x >= rectScaledX + rectScaledWidth - 20 &&
+                y >= rectScaledY + rectScaledHeight - 20;
+
+            if (!rectCreated.isHighlighted) {
+                if (instance.data.proxyVariables.inputMode != instance.data.InputModeEnum.select) {
+                    instance.data.inputMode = instance.data.InputModeEnum.select;
+                    instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.select;
+                    rectCreated.cursor = "pointer";
+                }
+            }
+
+            if (rectCreated.isHighlighted && !isInBottomRightCorner) {
+                if (instance.data.proxyVariables.inputMode != instance.data.InputModeEnum.move) {
+                    instance.data.inputMode = instance.data.InputModeEnum.move;
+                    instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.move;
+                    rectCreated.cursor = "move";
+                }
+            }
+            if (rectCreated.isHighlighted && isInBottomRightCorner) {
+                if (instance.data.proxyVariables.inputMode != instance.data.InputModeEnum.scale) {
+                    instance.data.inputMode = instance.data.InputModeEnum.scale;
+                    instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.scale;
+                    rectCreated.cursor = "nwse-resize";
+                }
+
+
+            }
+        });
+        rectCreated.addEventListener("pointerdown", e => {
+            e.stopPropagation();
+            console.log(`we just hovered over a rectangle`, rectCreated)
+            const x = e.global.x - instance.data.mainContainer.x;
+            const y = e.global.y - instance.data.mainContainer.y;
+            let rectScaledWidth = rectCreated.width
+            let rectScaledHeight = rectCreated.height
+            let rectScaledX = rectCreated.x
+            let rectScaledY = rectCreated.y
+            const isInBottomRightCorner =
+                x >= rectScaledX + rectScaledWidth - 20 &&
+                y >= rectScaledY + rectScaledHeight - 20;
+
+            console.log(`we just clicked on a rectangle`, rectCreated)
+            if (!rectCreated.isSelected) {
+                instance.data.proxyVariables.selectedRectangle = rectCreated;
+                instance.data.selectedRectangle = rectCreated;
+            }
+
+
+
+            //trigger the move start if the rectangle is highlighted
+            if (rectCreated.isHighlighted && !isInBottomRightCorner) {
+                console.log(`the rect is highlighted`)
+                if (instance.data.proxyVariables.inputMode !== instance.data.InputModeEnum.move) {
+                    instance.data.inputMode = instance.data.InputModeEnum.move;
+                    instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.move;
+                    rectCreated.cursor = "move";
+                }
+                instance.data.proxyVariables.rectangleBeingMoved = rectCreated;
+
+                //get the start position of the rectangle
+                startPosition = e.target.position;
+
+
+                //store the mouse position relative to the rectangle click position
+                //this is so that the rectangle will move with the mouse, and not jump to the mouse position
+                //clicked in the world at 500 subtractr the start position of the rectangle at 100 -- we clicked 400 px in the rectangle
+                rectCreated.relativeMouseX =
+                    e.data.global.x - startPosition.x - instance.data.mainContainer.x;
+                rectCreated.relativeMouseY =
+                    e.data.global.y - startPosition.y - instance.data.mainContainer.y;
+                //store the original position of the rectangle so we know if we need to push an update to the server
+                rectCreated.originalMovePositionX = rectCreated.position.x;
+                rectCreated.originalMovePositionY = rectCreated.position.y;
+                rectCreated.isMoving = true;
+                console.log(`rectCreated-move`, rectCreated)
+            }
+        });
+        rectCreated.addEventListener("pointerup", e => {
+            e.stopPropagation();
+
+            if (instance.data.proxyVariables.rectangleBeingMoved) {
+
+                console.log(`the rectangle being moved is`, instance.data.proxyVariables.rectangleBeingMoved)
+                console.log(`the original position is`, instance.data.proxyVariables.rectangleBeingMoved.originalMovePositionY, instance.data.proxyVariables.rectangleBeingMoved.originalMovePositionX)
+                // Store the rectangle being moved in a variable
+                let rectbeingMoved = instance.data.proxyVariables.rectangleBeingMoved;
+                // Store the rect's current x and y position in variables
+                let rectX = rectbeingMoved.x;
+                let rectY = rectbeingMoved.y;
+
+                //check if the rectangle has moved
+                if (rectbeingMoved.originalMovePositionX != rectX || rectbeingMoved.originalMovePositionY != rectY) {
+
+
+
+
+                    let headersList = {
+                        "Accept": "*/*",
+                    }
+                    let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
+                    let bodyContent = new FormData();
+                    bodyContent.append("x", rectbeingMoved.position.x);
+                    bodyContent.append("y", rectbeingMoved.position.y);
+                    bodyContent.append("width", rectbeingMoved.width);
+                    bodyContent.append("height", rectbeingMoved.height);
+                    bodyContent.append("initial_drawn_scale", drawnScale)
+                    bodyContent.append("drawn_label_snippet", rectbeingMoved.id);
+
+
+
+
+                    fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
+                        method: "POST",
+                        body: bodyContent,
+                        headers: headersList
+                    }).then(response => response.json())
+                        .then(result => {
+                            let newID = result.response.drawn_attribute_snippet._id;
+                            console.log(`the new id`, newID);
+                            console.log(result.response);
+                            console.log(result.response.drawn_attribute_snippet);
+                            console.log(result.response.drawn_attribute_snippet._id);
+                        })
+                }
+
+                instance.data.rectangleBeingMoved = null;
+                instance.data.proxyVariables.rectangleBeingMoved = null;
+            }
+
+
+            instance.data.proxyVariables.rectangleBeingMoved = null;
+            instance.data.movingRectangle = null;
+            instance.data.rectangleBeingResized = null;
+            instance.data.proxyVariables.rectangleBeingResized = null;
+
+
+        }, { passive: true });
+
+        rectCreated.addEventListener("pointerout", e => {
+            console.log(`we just hovered out of a rectangle`, rectCreated)
+        });
+
+
         // remove it from current ceration and chose new color for next one
-        instance.data.addLabel(instance.data.currentRectangle);
-        console.log("currentRect that im testing", instance.data.currentRectangle);
-        instance.data.currentRectangle.intialScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+        instance.data.addLabel(rectCreated);
 
-        instance.data.currentRectangle = null;
+        rectCreated.intialScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
+
     };
 
-    instance.data.controlOver = function () {
-        this.isOver = true;
-    };
 
-    instance.data.controlOut = function () {
-        this.isOver = false;
-        instance.data.removeIfUnused(this);
-    };
 
-    instance.data.onRectangleOver = function () {
+    instance.data.onRectangleOver = function (e) {
+        e.stopPropagation();
+        e.bubbles = false;
         // Do not hover rectangle if we are moving
-        if (instance.data.inputMode == instance.data.InputModeEnum.move || instance.data.inputMode == instance.data.InputModeEnum.scale) {
-            return;
-        }
-        // Do not hover rectangle if we creating
-        if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition) {
-            return;
-        }
-        console.log("Over");
+        console.log(`we just hovered over a rectangle`, e)
+
         this.isOver = true;
         instance.data.inputMode = instance.data.InputModeEnum.select;
+
         instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.select;
         // set current hovered rect to be on the top
         instance.data.bringToFront(this);
@@ -776,6 +906,8 @@ function(instance, context) {
     // Event is triggered when we move mouse out of rectangle
     instance.data.onRectangleOut = function () {
         this.isOver = false;
+        instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.create;
+        instance.data.inputMode = instance.data.InputModeEnum.create;
         console.log("OUT");
     };
 

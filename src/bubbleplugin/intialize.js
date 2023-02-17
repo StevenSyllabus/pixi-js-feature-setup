@@ -21,7 +21,7 @@ function(instance, context) {
     instance.data.createdScrollBar = false;
     instance.data.originalWebsiteScreenshotURL;
     instance.data.scrollingTimeout;
-    instance.data.maxScroll;
+    instance.data.maxScroll = .1;
     instance.data.scrollBarLastY;
     instance.data.scrollBarLastTop;
     instance.data.scrollPositionBefore = 0;

@@ -1,6 +1,10 @@
 function(instance, properties, context) {
     console.log("update is running", properties);
     instance.data.accountWebPageID = properties.account_webpage?.get(`_id`);
+    instance.data.proxyVariables.labelToHighlight = properties.label_to_highlight?.get(`_id`);
+
+
+
     //properties.attributes
     //properties.attributes
     /*
@@ -43,6 +47,7 @@ ATT
     instance.data.dasOrigin = properties.drawn_attribute_snippets.get(0, properties.drawn_attribute_snippets.length());
     instance.data.highlightColor = properties.highlight_color; //yellow
     instance.data.highlightColorAlpha = properties.highlight_color_alpha;
+    instance.data.normalColorAlpha = properties.normal_color_alpha;
     instance.data.dragColor = properties.drag_color; //red
     instance.data.resizeColor = properties.resize_color;
     instance.data.changeColor = properties.changeColor;
@@ -63,8 +68,8 @@ ATT
         console.log(`running das foreach`)
         console.log(`labels[index]`, labels[index])
         console.log(`labelColors[index]`, labelColors[index])
-        das.labelUniqueID = das.get('_id');
-        console.log(`the das uniqueID is`, das.labelUniqueID, `and the das attributeId is`, das.attributeId)
+        das.labelUniqueID = das.get('attribute')
+
         if (labels[index] && labelColors[index]) {
             das.attributeName = labels[index].get('name_text');
             das.attributeId = labels[index].get('_id');
@@ -183,7 +188,7 @@ ATT
     rects2[1] = new Array(100, 150, 250, 250, "0xDE3249", 4);
     //end test data
     instance.data.startX, instance.data.startY, instance.data.endX, instance.data.endY;
-    const mainContainer = instance.data.mainContainer
+    const mainContainer = instance.data.mainContainer;
 
 
 
@@ -212,9 +217,28 @@ ATT
         instance.data.mainElementObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 clearTimeout(instance.data.resizeTimer);
+
+                if (instance.data.resizeScroll) {
+                    var d = new Date();
+                    if ((instance.data.date) && (instance.data.date < d)) {
+                        instance.data.date = new Date(d.getTime() + 7000);
+                        instance.data.resizeScroll = ((instance.data.scrollPositionBefore + (instance.data.resizeScroll * 9)) / 10);
+                    }
+                    else {
+                        instance.data.resizeScroll = instance.data.scrollPositionBefore;
+                    }
+                } else {
+                    instance.data.resizeScroll = instance.data.scrollPositionBefore;
+                    instance.data.date = d;
+                }
+
+                console.log("instance.data.date", instance.data.date, d);
                 instance.data.resizeTimer = setTimeout(() => {
                     console.log(`We just resized after timeout`, entry.contentRect);
                     instance.data.app.resize();
+                    let newPosition = Math.abs(instance.data.resizeScroll) * (instance.data.mainContainer.height - instance.data.app.view.height);
+                    instance.data.mainContainer.position.y = -newPosition;
+                    console.log("resize-instance.data.scrollPositionBefore", instance.data.scrollPositionBefore, instance.data.resizeScroll, `instance.data.mainContainer.height instance.data.app.view.height`, instance.data.mainContainer.height, instance.data.app.view.height, "newPosition", newPosition);
                     if (instance.data.scrollBar) {
 
                     }
@@ -289,22 +313,39 @@ ATT
                 //c listeners
                 if (!instance.data.addedMainContainerEventListeners) {
                     mainContainer.on('pointerdown', (e) => {
-                        // Initiate rect creation
-                        if (instance.data.inputMode == instance.data.InputModeEnum.create) {
-                            instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
-                            instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
-                            instance.publishState("currently_selected_drawing", '')
+                        if (e.data.button === 0) {
 
-                        }
-                        if (instance.data.inputMode == instance.data.InputModeEnum.select) {
-                            //PLACEHOLDER for select function
-                            instance.data.selectRect(e.target);
+                            // Initiate rect creation
+                            if (instance.data.inputMode == instance.data.InputModeEnum.create) {
+                                instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
+                                instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
+                                instance.publishState("currently_selected_drawing", null)
+                                instance.data.proxyVariables.selectedRectangle = null;
+                                instance.data.proxyVariables.rectangleBeingMoved = null;
+
+
+                            }
+                            if (instance.data.inputMode == instance.data.InputModeEnum.select) {
+                                //PLACEHOLDER for select function
+                                instance.data.selectRect(e.target);
+                            }
                         }
                     });
+                    mainContainer.addEventListener('pointerupoutside', (e) => {
+
+                        console.log("pointerupoutside", e)
+                    }, { passive: true });
                     mainContainer.on('pointermove', (e) => {
+
+
                         // Do this routine only if in create mode and have started creation
                         // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
-                        if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition) {
+                        if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition && instance.data.proxyVariables.rectangleBeingMoved == null && instance.data.proxyVariables.rectangleBeingResized == null) {
+                            instance.data.mainContainer.children.forEach(child => {
+                                if (child.name !== "webpage") {
+                                    child.interactive = false;
+                                }
+                            })
                             // get new global position from event
                             let currentPosition = e.global;
                             let {
@@ -313,6 +354,7 @@ ATT
                             } = instance.data.getStartAndSize(currentPosition, instance.data.startPosition, "draw")
                             if (size.x > 5 && size.y > 5) {
                                 if (!instance.data.currentRectangle) {
+                                    console.log(`creating new rect`)
                                     instance.data.currentRectangle = new PIXI.Graphics().beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
                                         .lineStyle({
                                             color: "0x" + instance.data.highlightColor,
@@ -332,13 +374,62 @@ ATT
                                 }
                             } else {
                                 if (instance.data.currentRectangle) {
+                                    console.log(`removing current rect`)
                                     mainContainer.removeChild(instance.data.currentRectangle);
                                     instance.data.currentRectangle = null
                                 }
                             }
                         }
+                        if (instance.data.proxyVariables.rectangleBeingMoved) {
+                            console.log(`we're moving`)
+
+                            const mouseX = e.global.x - instance.data.mainContainer.x;
+                            const mouseY = e.global.y - instance.data.mainContainer.y;
+                            instance.data.proxyVariables.rectangleBeingMoved.position.set(
+                                mouseX - instance.data.proxyVariables.rectangleBeingMoved.relativeMouseX,
+                                mouseY - instance.data.proxyVariables.rectangleBeingMoved.relativeMouseY
+                            );
+
+                        }
+                        if (instance.data.proxyVariables.rectangleBeingResized) {
+                            console.log(`we're resizing`)
+                            console.log(`we're resizing rect:`, instance.data.proxyVariables.rectangleBeingResized)
+
+                            //just grab the rectangle we're resizing for shorter syntax
+                            const resizingRectangle = instance.data.proxyVariables.rectangleBeingResized;
+                            const mouseX = e.global.x - instance.data.mainContainer.x;
+                            const mouseY = e.global.y - instance.data.mainContainer.y;
+                            //calculate the new size based on mouse position and starting position
+                            let newWidth =
+                                mouseX - resizingRectangle.startMouseX + resizingRectangle.originalResizeWidth;
+                            let newHeight =
+                                mouseY - resizingRectangle.startMouseY + resizingRectangle.originalResizeHeight;
+
+                            console.log(`rectCreated-resize newheight calcs:`, mouseY, resizingRectangle.startMouseY, resizingRectangle.originalResizeHeight)
+                            console.log(`rectCreated-resize`, resizingRectangle)
+                            console.log(`rectCreated-resize mouseX and Y`, resizingRectangle.startMouseX, resizingRectangle.startMouseY)
+                            console.log(`rectCreated-resize relativeMouseX and Y`, resizingRectangle.relativeMouseX, resizingRectangle.relativeMouseY)
+                            console.log(`rectCreated-resize originalResizeWidth and Height`, resizingRectangle.originalResizeWidth, resizingRectangle.originalResizeHeight)
+
+                            console.log(`rectCreated-resize newheight and width`, newHeight, newWidth)
+
+
+                            resizingRectangle
+                                .clear()
+                                .beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
+                                .lineStyle({
+                                    color: 0x000000,
+                                    alpha: 1,
+                                    width: 1,
+                                })
+                                .drawRect(0, 0, newWidth, newHeight)
+                                .endFill();
+                            console.log(`rectCreated-resize graphic`, resizingRectangle.width, resizingRectangle.height);
+
+                        }
                     });
                     mainContainer.on('pointerup', (e) => {
+                        console.log(`main container pointer up`)
 
                         // Wrap up rect creation
                         instance.data.startPosition = null
@@ -366,11 +457,6 @@ ATT
                             ]
 
 
-                            //get the current versions url for updating the proper database
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
-                            console.log(`secondSlash: ${secondSlash}`)
 
 
                             //create the data directly via the API
@@ -386,7 +472,7 @@ ATT
                             bodyContent.append("initial_drawn_scale", rectData[7]);
                             bodyContent.append("account_webpage", instance.data.accountWebPageID);
 
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/create-new-drawn-label`, {
+                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/create-new-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList
@@ -414,44 +500,20 @@ ATT
                         if (instance.data.rectangleBeingResized) {
                             console.log(`the rectangle being resize is`, instance.data.rectangleBeingResized)
                             //update the shape in the database
-                            let headersList = {
-                                "Accept": "*/*",
-                            }
-                            let drawnScale = instance.data.app.view.width / instance.data.intialWebpageWidth;
 
-                            let bodyContent = new FormData();
-                            bodyContent.append("x", instance.data.rectangleBeingResized.position.x);
-                            bodyContent.append("y", instance.data.rectangleBeingResized.position.y);
-                            bodyContent.append("width", instance.data.rectangleBeingResized.width);
-                            bodyContent.append("height", instance.data.rectangleBeingResized.height);
-                            bodyContent.append("initial_drawn_scale", drawnScale)
-                            bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingResized.id);
-
-
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
-
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
-                                method: "POST",
-                                body: bodyContent,
-                                headers: headersList
-                            }).then(response => response.json())
-                                .then(result => {
-                                    let newID = result.response.drawn_attribute_snippet._id;
-                                    console.log(`the new id`, newID);
-                                    console.log(result.response);
-                                    console.log(result.response.drawn_attribute_snippet);
-                                    console.log(result.response.drawn_attribute_snippet._id);
-                                })
 
 
 
                             instance.data.rectangleBeingResized = null;
+                            instance.data.proxyVariables.rectangleBeingResized = null;
+                            instance.data.rectangleBeingMoved = null;
+                            instance.data.proxyVariables.rectangleBeingMoved = null;
+
                         }
 
-                        if (instance.data.rectangleBeingMoved) {
-                            console.log(`the rectangle being moved is`, instance.data.rectangleBeingMoved)
+                        if (instance.data.proxyVariables?.rectangleBeingMoved) {
+                            console.log(`the rectangle. maincontainer pointerup`)
+                            console.log(`the rectangle being moved is`, instance.data.proxyVariables.rectangleBeingMoved)
 
 
                             let headersList = {
@@ -468,11 +530,9 @@ ATT
                             bodyContent.append("drawn_label_snippet", instance.data.rectangleBeingMoved.id);
 
 
-                            let currentUrl = window.location.href;
-                            let urlArray = currentUrl.split('/');
-                            let secondSlash = urlArray[3];
 
-                            fetch(`https://app.syllabus.io/${secondSlash}/api/1.1/wf/update-drawn-label`, {
+
+                            fetch(`https://app.syllabus.io/${instance.data.dynamicFetchParam}api/1.1/wf/update-drawn-label`, {
                                 method: "POST",
                                 body: bodyContent,
                                 headers: headersList
@@ -488,13 +548,29 @@ ATT
 
                             instance.data.rectangleBeingMoved = null;
                         }
-
+                        instance.data.proxyVariables.rectangleBeingMoved = null;
+                        instance.data.movingRectangle = null;
+                        instance.data.rectangleBeingResized = null;
+                        instance.data.proxyVariables.rectangleBeingResized = null;
 
 
                         instance.data.onDragEndNew()
                     });
                     //load our data
                     mainContainer.on('pointerupoutside', instance.data.onDragEndNew);
+                    mainContainer.addEventListener("pointermove", e => {
+
+
+
+                        if (instance.data.proxyVariables.inputMode !== instance.data.InputModeEnum.create && !instance.data.proxyVariables.rectangleBeingMoved) {
+                            console.log(`we're not in create mode`)
+                            instance.data.proxyVariables.inputMode = instance.data.InputModeEnum.create
+                            instance.data.inputMode = instance.data.InputModeEnum.create
+                            mainContainer.cursor = "crosshair"
+
+                        }
+                    }, { passive: true })
+
                     mainContainer.interactive = true;
                     mainContainer.hitArea = mainContainer.screen;
                     instance.data.addedMainContainerEventListeners = true;

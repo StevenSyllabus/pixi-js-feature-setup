@@ -1,18 +1,10 @@
 function(instance, properties, context) {
     console.log("update is running", properties);
     instance.data.accountWebPageID = properties.account_webpage?.get(`_id`);
+    instance.data.proxyVariables.labelToHighlight = properties.label_to_highlight?.get(`_id`);
 
-    if (properties.label_to_highlight?.get(`_id`) && instance.data.proxyVariables.labelToHighlight !== properties.label_to_highlight.get(`_id`)) {
 
-        instance.data.proxyVariables.labelToHighlight = properties.label_to_highlight.get(`_id`);
 
-        console.log(`label to highlight`, instance.data.proxyVariables.labelToHighlight)
-    }
-    else {
-        console.log(`no label to highlight`)
-        instance.data.proxyVariables.labelToHighlight = null;
-
-    }
     //properties.attributes
     //properties.attributes
     /*
@@ -321,19 +313,22 @@ ATT
                 //c listeners
                 if (!instance.data.addedMainContainerEventListeners) {
                     mainContainer.on('pointerdown', (e) => {
-                        // Initiate rect creation
-                        if (instance.data.inputMode == instance.data.InputModeEnum.create) {
-                            instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
-                            instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
-                            instance.publishState("currently_selected_drawing", '')
-                            instance.data.proxyVariables.selectedRectangle = null;
-                            instance.data.proxyVariables.rectangleBeingMoved = null;
+                        if (e.data.button === 0) {
+
+                            // Initiate rect creation
+                            if (instance.data.inputMode == instance.data.InputModeEnum.create) {
+                                instance.data.startPosition = new PIXI.Point().copyFrom(e.global)
+                                instance.data.logging ? console.log("pointerdown", instance.data.startPosition) : null;
+                                instance.publishState("currently_selected_drawing", null)
+                                instance.data.proxyVariables.selectedRectangle = null;
+                                instance.data.proxyVariables.rectangleBeingMoved = null;
 
 
-                        }
-                        if (instance.data.inputMode == instance.data.InputModeEnum.select) {
-                            //PLACEHOLDER for select function
-                            instance.data.selectRect(e.target);
+                            }
+                            if (instance.data.inputMode == instance.data.InputModeEnum.select) {
+                                //PLACEHOLDER for select function
+                                instance.data.selectRect(e.target);
+                            }
                         }
                     });
                     mainContainer.addEventListener('pointerupoutside', (e) => {
@@ -342,9 +337,15 @@ ATT
                     }, { passive: true });
                     mainContainer.on('pointermove', (e) => {
 
+
                         // Do this routine only if in create mode and have started creation
                         // this event triggers all the time but we stop it by not providing start postition when cursor not pressed
-                        if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition) {
+                        if (instance.data.inputMode == instance.data.InputModeEnum.create && instance.data.startPosition && instance.data.proxyVariables.rectangleBeingMoved == null && instance.data.proxyVariables.rectangleBeingResized == null) {
+                            instance.data.mainContainer.children.forEach(child => {
+                                if (child.name !== "webpage") {
+                                    child.interactive = false;
+                                }
+                            })
                             // get new global position from event
                             let currentPosition = e.global;
                             let {
@@ -353,6 +354,7 @@ ATT
                             } = instance.data.getStartAndSize(currentPosition, instance.data.startPosition, "draw")
                             if (size.x > 5 && size.y > 5) {
                                 if (!instance.data.currentRectangle) {
+                                    console.log(`creating new rect`)
                                     instance.data.currentRectangle = new PIXI.Graphics().beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
                                         .lineStyle({
                                             color: "0x" + instance.data.highlightColor,
@@ -372,6 +374,7 @@ ATT
                                 }
                             } else {
                                 if (instance.data.currentRectangle) {
+                                    console.log(`removing current rect`)
                                     mainContainer.removeChild(instance.data.currentRectangle);
                                     instance.data.currentRectangle = null
                                 }
@@ -379,6 +382,7 @@ ATT
                         }
                         if (instance.data.proxyVariables.rectangleBeingMoved) {
                             console.log(`we're moving`)
+
                             const mouseX = e.global.x - instance.data.mainContainer.x;
                             const mouseY = e.global.y - instance.data.mainContainer.y;
                             instance.data.proxyVariables.rectangleBeingMoved.position.set(
@@ -412,7 +416,7 @@ ATT
 
                             resizingRectangle
                                 .clear()
-                                .beginFill(instance.data.highlightColorAsHex, 0.07)
+                                .beginFill("0x" + instance.data.highlightColor, instance.data.highlightColorAlpha)
                                 .lineStyle({
                                     color: 0x000000,
                                     alpha: 1,
